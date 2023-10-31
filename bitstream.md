@@ -55,7 +55,8 @@ Example
     ],
     "input": [
         [
-            "a", [0,0,0] // [var, [layout stage, x, y]]
+            "_comment": "[var, [layout stage, x, y]]",
+            "a", [0,0,0]
         ],
         [
             "b", [0,0,3]
@@ -71,9 +72,11 @@ Example
     "luts": [
         {
             "name": "lut1",
-            "type": 4, // or 6,
+            "_type_comment": "4 or 6",
+            "type": 4,
             "op": "and",
-            "location": [0,0], // [layout stage, x]
+            "_loc_comment": "[layout stage, x]",
+            "location": [0,0],
             "connections": [
                 [
                     [0,0],
