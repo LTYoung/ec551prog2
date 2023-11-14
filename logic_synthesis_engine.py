@@ -8,21 +8,7 @@
 ################################################
 # methods:
 # parser(eq) -> (literals, neglist, ops)
-# synth_engine(data: adt,opt: str) -> str
-################################################
-# commands:
-# csop <equation>   -> prints canonical SOP
-# cpos <equation>   -> prints canonical POS
-# icsop <equation>  -> prints inverted canonical SOP
-# icpos <equation>  -> prints inverted canonical POS
-# msop <equation>   -> prints minimal SOP
-# mpos <equation>   -> prints minimal POS
-# npi <equation>    -> prints number of prime implicants
-# nepi <equation>   -> prints number of essential prime implicants
-# onmin <equation>  -> prints onset minterms
-# onmax <equation>  -> prints onset maxterms
-# tt <equation>     -> prints truth table
-# kmap <equation>   -> prints k-map
+# synth_engine(data: adt) -> str
 ################################################
 
 import eq_adt as adt
