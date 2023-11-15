@@ -39,6 +39,11 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     
     data = fpga.fpga_adt()
 
+    # create LUTs
+    for i in range(nLut):
+        lut = fpga.LUT('LUT' + str(i), tLut)
+        data.add_lut(lut)
+
     # get partially connected LUT file if specified
     connectivity = []
     if cLut != '':
@@ -123,5 +128,5 @@ def calloc_lst(n):
 # end calloc_lst
 
 # config test
-# conf = config(["a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"], 2, 4)
-# print(conf)
+conf = config(["a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"], 2, 4)
+print(conf)
