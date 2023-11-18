@@ -12,6 +12,7 @@ class fpga_adt:
         self.wire = []
         self.inputs = []
         self.outputs = []
+        self.lut_type = 0
         self.luts = []
         self.connectivity = []
         self.eqs = []
@@ -100,6 +101,7 @@ class LUT:
         self.op = ''
         self.location = []
         self.connections = []
+        self.data = {}
     # end __init__
 
     def update_name(self, name):
