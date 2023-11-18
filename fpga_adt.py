@@ -16,7 +16,6 @@ class fpga_adt:
         self.luts = []
         self.connectivity = []
         self.eqs = []
-        self.lut_type = -1
         self.fromBitstream = False
     # end __init__
 
