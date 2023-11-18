@@ -15,6 +15,7 @@ class fpga_adt:
         self.luts = []
         self.connectivity = []
         self.eqs = []
+        self.lut_type = -1
         self.fromBitstream = False
     # end __init__
 
@@ -45,6 +46,10 @@ class fpga_adt:
     def update_eqs(self, eqs):
         self.eqs = eqs
     # end update_eqs
+
+    def update_lut_type(self, lut_type):
+        self.lut_type = lut_type
+    # end update_lut_type
     
     def get_layout(self):
         return self.layout
@@ -73,6 +78,10 @@ class fpga_adt:
     def get_eqs(self):
         return self.eqs
     # end get_eqs
+
+    def get_lut_type(self):
+        return self.lut_type
+    # end get_lut_type
 
     def isBitstream(self):
         return self.fromBitstream
