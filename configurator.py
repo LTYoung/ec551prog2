@@ -45,6 +45,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
         data.add_lut(lut)
 
     # get partially connected LUT file if specified
+    # TODO: implement
     connectivity = []
     if cLut != '':
         conn_file = 'connectivity.json'
@@ -56,24 +57,40 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     # minimize expression to fit in LUTs
     eq = []
     inputs = []
+    rein   = {} # redundant input assignment
     outputs = []
     for e in expr:
         # TODO: take out output & check for same name I/O
-        outputs.append('TBD')
+        # eliminate all spaces
+        e = e.replace(' ', '')
+        ex = e.split('=')
+        if ex[0] not in outputs:
+            outputs.append(ex[0])
+        else:
+            if ex[0] in rein:
+                rein[ex[0]] += 1
+            else:
+                rein[ex[0]] = 1
+            # replace input in expression with redundant input
+            ex[1] = ex[1].replace(ex[0], ex[0] + str(rein[ex[0]]))
+
+        # if existing output is input, replace with equation?
+
         # minimize expression
-        ex = logic.eq_adt(e)
-        lit, neg, ops = lse.parser(e)
-        ex.update_literals(lit)
-        ex.update_neglist(neg)
-        ex.update_ops(ops)
+        equ = logic.eq_adt(ex[1])
+        lit, neg, ops = lse.parser(ex[1])
+        equ.update_literals(lit)
+        equ.update_neglist(neg)
+        equ.update_ops(ops)
 
         # add literals to LUT data
         # TODO: check for I/O with the same name
         for l in lit:
-            inputs.append(l)
-
+            if l in outputs:
+                # replace input in expression with redundant input
+                continue
         
-        parts = e.split('+')
+        parts = ex[1].split('+')
         # check if expression fits in LUT based on number of expressions
         if len(parts) > nLut:
             # TODO
@@ -87,7 +104,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
         if len(eq) > nLut:
             # TODO
             pass
-        eq.append(ex)
+        eq.append(equ)
 
     # update ADT
     data.update_inputs(inputs)
@@ -115,8 +132,13 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     data.update_layout(rlayout)
 
     # check for more problems?
-    # TODO: convert data to fpga_adt
     # send data to FPGA synthesis engine
+
+    # TODO: wait for FSE implementation
+    # fdata is updated fpga_adt
+    # ndata reports any problems / LUT usage
+    # fdata,ndata = fse.fse()
+
     return data
 # end config
 
@@ -128,5 +150,9 @@ def calloc_lst(n):
 # end calloc_lst
 
 # config test
-conf = config(["a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"], 2, 4)
-print(conf)
+bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
+bigG = "G = F+a*b"
+conf = config([bigF], 6, 4)
+print(conf.get_eqs()[0].eq)
+conf2 = config([bigF, bigG], 6, 4)
+print(conf2.get_eqs()[0].eq, conf2.get_eqs()[1].eq)
