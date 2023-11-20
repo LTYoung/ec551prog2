@@ -7,7 +7,6 @@
 ################################################
 # TODO:
 # - convert bitstream to fpga_adt
-# - minimize expression to fit in LUTs (variable/literal reduction)
 # - implement fse infrastructure when pushed to main
 ################################################
 # methods:
@@ -101,6 +100,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
         l, n, o = lse.parser(red)
         if l != lit:
             # redo synthesis with reduced literals
+            equ = logic.eq_adt(red)
             equ.update_literals(l)
             equ.update_neglist(n)
             equ.update_ops(o)
@@ -146,26 +146,3 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
 
     return (0, data)
 # end config
-
-''' calloc_lst
-generate a list of zeros of length n
-'''
-def calloc_lst(n):
-    return [0 for i in range(n)]
-# end calloc_lst
-
-# config test
-# bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
-# bigG = "G = F+a*b"
-# otherG = "G = a+b"
-bigH = "H = a*b + c'"
-# conf = config([bigF], 6, 4)
-# print(conf.get_reqs())
-# conf2 = config([bigF, bigG], 6, 4)
-# print(conf2.get_reqs())
-
-# conf3 = config([bigF, bigG, otherG], 8, 4)
-# print(conf3.get_reqs())
-
-conf4 = config([bigH], 4, 4)
-print(conf4.get_reqs())
