@@ -74,7 +74,8 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
             else:
                 rein[ex[0]] = 1
             nop = ex[0] + str(rein[ex[0]])
-            # replace input in expression with redundant input
+            outputs.append(nop)
+            # TODO: replace input in expression with redundant input
             
         # find all instances of rein in e
         idx = 0
@@ -95,6 +96,15 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
         equ.update_ops(ops)
 
         red = lse.synth_engine(equ)
+
+        # check if literals lost in minimization for further reduction
+        l, n, o = lse.parser(red)
+        if l != lit:
+            # redo synthesis with reduced literals
+            equ.update_literals(l)
+            equ.update_neglist(n)
+            equ.update_ops(o)
+            red = lse.synth_engine(equ)
 
         eq.append(equ)
         req.append(nop + '=' + red)
@@ -148,6 +158,7 @@ def calloc_lst(n):
 # bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
 # bigG = "G = F+a*b"
 # otherG = "G = a+b"
+bigH = "H = a*b + c'"
 # conf = config([bigF], 6, 4)
 # print(conf.get_reqs())
 # conf2 = config([bigF, bigG], 6, 4)
@@ -155,3 +166,6 @@ def calloc_lst(n):
 
 # conf3 = config([bigF, bigG, otherG], 8, 4)
 # print(conf3.get_reqs())
+
+conf4 = config([bigH], 4, 4)
+print(conf4.get_reqs())
