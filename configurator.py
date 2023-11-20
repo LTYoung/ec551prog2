@@ -103,6 +103,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     data.update_outputs(outputs)
     data.update_eqs(eq)
     data.update_reqs(req)
+    data.update_lut_type(tLut)
     
     # develop specs
     r = 2 + nLut//16
