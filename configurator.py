@@ -6,19 +6,18 @@
 # Configures the data for the FPGA synthesis engine
 ################################################
 # TODO:
-# - convert bitstream to json to fpga_adt
-# - minimize expression
-# - convert data to fpga_adt
-# - define partially connected LUTs file
+# - convert bitstream to fpga_adt
+# - minimize expression to fit in LUTs (variable/literal reduction)
+# - implement fse infrastructure when pushed to main
 ################################################
 # methods:
 # config()
 ################################################
 
 import logic_synthesis_engine as lse
+# import fse
 import eq_adt as logic
 import fpga_adt as fpga
-import json
 
 
 ''' config
@@ -28,14 +27,15 @@ inputs:
 - nLuts: number of LUTs - number > 0
 - tLut: number of inputs per LUT - 4 or 6
 - cLut: connectivity of LUTs - fully or partially connected
-- isBitstream: boolean to determine if bitstream
+- bitstream: bitstream file
 '''
-def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
+def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
+    if bitstream:
+        # TODO: implement when pushed to main
+        # fse.load_bitstream(bitstream)
+        return (-1, None)
     if tLut != 4 and tLut != 6:
         raise Exception("tLut must be 4 or 6")
-    if isBitstream:
-        # TODO: convert bitstream to json to fpga_adt
-        return -1
     
     data = fpga.fpga_adt()
 
@@ -132,7 +132,9 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     # ndata reports any problems / LUT usage
     # fdata,ndata = fse.fse()
 
-    return data
+    # fse.write_bitstream(data)
+
+    return (0, data)
 # end config
 
 ''' calloc_lst
