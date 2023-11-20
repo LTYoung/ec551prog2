@@ -15,6 +15,7 @@ import json
 import fpga_adt as fpga
 import eq_adt as eq
 import numpy as np
+import math
 import sys
 
 
@@ -59,29 +60,19 @@ def analyze_eq(eq_adt: list):
 # either 4 or 6 input luts
 # input: eq_adt, lut_type, fpga_adt
 # output: partitioned_luts, num_luts
+import numpy as np
+import math
+
 def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
-    # lut_type = 4 or 6
-    # 4 input lut: 4 input, 1 output
-    # 6 input lut: 6 input, 1 output
-
-    # get the truth table of the eq_adt
-
-    oliteral = list(set(eq_adt.literals))  # unique, ordered literals
+    oliteral = list(set(eq_adt.literals))
     num_literals = len(oliteral)
-    # Handle cases where no partitioning is needed
+
     if (lut_type == 4 and num_literals <= 4) or (lut_type == 6 and num_literals <= 6):
-        return eq_adt, 1
+        return eq_adt, 1, {}
+
     table = eq_adt.table
-
-    # Partitioning logic for different LUT types
     if lut_type in [4, 6]:
-        num_luts = np.ceil(num_literals / lut_type)
-        if num_luts > len(fpga_adt.get_luts()):
-            eprint(
-                f"Error: not enough LUTs available in current layout for {lut_type}-input LUT"
-            )
-            return None, num_luts - len(fpga_adt.get_luts())
-
+        num_luts = int(np.ceil(len(table) / lut_type))
         partitioned_table = []
         start_index = 0
         for _ in range(int(num_luts)):
@@ -89,12 +80,56 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
             partitioned_table.append(dict(list(table.items())[start_index:end_index]))
             start_index += lut_type
 
+        num_select_lines = math.ceil(math.log2(num_luts))
+
+        # Calculate the total number of LUTs needed, including MUX LUTs
+        total_luts_needed = num_luts
+        mux_layers = {}
+        current_layer_luts = num_luts
+        layer = 0
+
+        while current_layer_luts > 1:
+            layer_mux_luts = math.ceil(current_layer_luts / lut_type)
+            total_luts_needed += layer_mux_luts
+            mux_layers[layer] = {"num_mux_luts": layer_mux_luts, "controlled_luts": current_layer_luts}
+            current_layer_luts = layer_mux_luts
+            layer += 1
+
+        if total_luts_needed > len(fpga_adt.get_luts()):
+            eprint("Error: Not enough LUTs available")
+            return None, total_luts_needed - len(fpga_adt.get_luts()), {}
+
+        # Assign partitioned LUTs to MUX LUTs
+        mux_assignments = {}
+        for layer in mux_layers:
+            for mux_index in range(mux_layers[layer]["num_mux_luts"]):
+                controlled_luts = []
+                for lut_index in range(mux_index * lut_type, min((mux_index + 1) * lut_type, mux_layers[layer]["controlled_luts"])):
+                    controlled_luts.append(lut_index)
+                mux_assignments[(layer, mux_index)] = controlled_luts
+        
+        mux_output_assignments = {}
+        current_input_combinations = range(int(num_luts))  # Initial input combinations for the first layer
+
+        for layer in mux_layers:
+            layer_output_assignments = {}
+            for mux_index in range(mux_layers[layer]["num_mux_luts"]):
+                # Each MUX LUT at this layer will have output assignments based on the input combinations
+                # For simplicity, let's assume each MUX LUT outputs a unique identifier for now
+                output_id = f"Layer{layer}_MUX{mux_index}"
+                layer_output_assignments[output_id] = current_input_combinations[mux_index * lut_type : (mux_index + 1) * lut_type]
+            mux_output_assignments[layer] = layer_output_assignments
+
+            # Update current_input_combinations for the next layer
+            current_input_combinations = list(layer_output_assignments.keys())
+
     else:
-        eprint(
-            "Error: LUT type not supported, supported types are 4 inputs and 6 inputs"
-        )
-        return None, None
-    return partitioned_table, num_luts
+        eprint("Error: LUT type not supported")
+        return None, None, {}
+
+    return partitioned_table, total_luts_needed, mux_assignments
+
+
 
 # LUT routing with no connection constraints
 # and can be mapped to any LUT from any inputs

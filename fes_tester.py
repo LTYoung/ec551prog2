@@ -5,7 +5,7 @@ import eq_adt as eq
 import fpga_adt as fpga
 import configurator as conf
 
-input0 = "(a+b'*c)*(d*e')+(f'*g+h)"
+input0 = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
 
 eq0 = eq.eq_adt(input0)
 lit, neg, ops = lse.parser(input0)
@@ -19,7 +19,18 @@ print("min: ", lse.synth_engine(eq0))
 analyze_out = fse.analyze_eq([eq0])
 print(analyze_out)
 
-conf0 = conf.config([input0], 6, 4)
+conf0 = conf.config([input0], 500, 4)
 print(conf0.get_eqs()[0].eq)
 
-fse.partition_to_lut(conf0.get_eqs()[0], 4, conf0)
+table, num_luts, mux= fse.partition_to_lut(eq0, 4, conf0)
+
+print("Original table:")
+print(eq0.table)
+print("Partitioned table:")
+print(table)
+print("LUTs needed:")
+print(num_luts)
+print("MUX assignments:")
+print(mux)
+# print("MUX output assignments: ")
+# print(mux_out)

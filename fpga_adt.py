@@ -12,9 +12,11 @@ class fpga_adt:
         self.wire = []
         self.inputs = []
         self.outputs = []
+        self.lut_type = 0
         self.luts = []
         self.connectivity = []
         self.eqs = []
+        self.reqs = []
         self.fromBitstream = False
     # end __init__
 
@@ -45,6 +47,14 @@ class fpga_adt:
     def update_eqs(self, eqs):
         self.eqs = eqs
     # end update_eqs
+
+    def update_lut_type(self, lut_type):
+        self.lut_type = lut_type
+    # end update_lut_type
+
+    def update_reqs(self, reqs):
+        self.reqs = reqs
+    # end update_reqs
     
     def get_layout(self):
         return self.layout
@@ -74,6 +84,14 @@ class fpga_adt:
         return self.eqs
     # end get_eqs
 
+    def get_lut_type(self):
+        return self.lut_type
+    # end get_lut_type
+
+    def get_reqs(self):
+        return self.reqs
+    # end get_reqs
+
     def isBitstream(self):
         return self.fromBitstream
     # end get_fromBitstream
@@ -91,6 +109,14 @@ class fpga_adt:
         self.luts.append(lut)
     # end add_lut
 
+    def add_eq(self, eq):
+        self.eqs.append(eq)
+    # end add_eq
+
+    def add_req(self, req):
+        self.reqs.append(req)
+    # end add_req
+
 # end fpga_adt
 
 class LUT:
@@ -100,6 +126,7 @@ class LUT:
         self.op = ''
         self.location = []
         self.connections = []
+        self.data = {}
     # end __init__
 
     def update_name(self, name):

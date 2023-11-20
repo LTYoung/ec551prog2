@@ -34,8 +34,8 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     if tLut != 4 and tLut != 6:
         raise Exception("tLut must be 4 or 6")
     if isBitstream:
-        # convert bitstream to json to fpga_adt
-        return
+        # TODO: convert bitstream to json to fpga_adt
+        return -1
     
     data = fpga.fpga_adt()
 
@@ -45,6 +45,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
         data.add_lut(lut)
 
     # get partially connected LUT file if specified
+    # TODO: implement
     connectivity = []
     if cLut != '':
         conn_file = 'connectivity.json'
@@ -55,47 +56,56 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     
     # minimize expression to fit in LUTs
     eq = []
+    req = []
     inputs = []
+    rein   = {} # redundant input assignment
     outputs = []
     for e in expr:
         # TODO: take out output & check for same name I/O
-        outputs.append('TBD')
+        # eliminate all spaces
+        e = e.replace(' ', '')
+        ex = e.split('=')
+        nop = ex[0] # new output name
+        if ex[0] not in outputs:
+            outputs.append(ex[0])
+        else:
+            if ex[0] in rein:
+                rein[ex[0]] += 1
+            else:
+                rein[ex[0]] = 1
+            nop = ex[0] + str(rein[ex[0]])
+            # replace input in expression with redundant input
+            
+        # find all instances of rein in e
+        idx = 0
+        while idx < len(ex[1]):
+            for r in rein:
+                if ex[1][idx:idx+len(r)] == r:
+                    if not ex[1][idx+len(r)].isalpha():
+                        # TODO: check if self referential
+                        ex[1] = ex[1][:idx] + r + str(rein[r]) + ex[1][idx+len(r):]
+            idx += 1
+            
+
         # minimize expression
-        ex = logic.eq_adt(e)
-        lit, neg, ops = lse.parser(e)
-        ex.update_literals(lit)
-        ex.update_neglist(neg)
-        ex.update_ops(ops)
+        equ = logic.eq_adt(ex[1])
+        lit, neg, ops = lse.parser(ex[1])
+        equ.update_literals(lit)
+        equ.update_neglist(neg)
+        equ.update_ops(ops)
 
-        # add literals to LUT data
-        # TODO: check for I/O with the same name
-        for l in lit:
-            inputs.append(l)
+        red = lse.synth_engine(equ)
 
-        
-        parts = e.split('+')
-        # check if expression fits in LUT based on number of expressions
-        if len(parts) > nLut:
-            # TODO
-            pass
-        # check if expression fits in LUT based on number of literals in expressions
-        for p in parts:
-            if len(p) > tLut:
-                # TODO
-                pass
-        # double check if expression fits in LUT based on number of expressions
-        if len(eq) > nLut:
-            # TODO
-            pass
-        eq.append(ex)
-
+        eq.append(equ)
+        req.append(nop + '=' + red)
     # update ADT
     data.update_inputs(inputs)
     data.update_outputs(outputs)
     data.update_eqs(eq)
+    data.update_reqs(req)
     
     # develop specs
-    r = 2
+    r = 2 + nLut//16
     c = nLut // r
     w = tLut * c-1
     # create layout
@@ -115,8 +125,13 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     data.update_layout(rlayout)
 
     # check for more problems?
-    # TODO: convert data to fpga_adt
     # send data to FPGA synthesis engine
+
+    # TODO: wait for FSE implementation
+    # fdata is updated fpga_adt
+    # ndata reports any problems / LUT usage
+    # fdata,ndata = fse.fse()
+
     return data
 # end config
 
@@ -128,5 +143,13 @@ def calloc_lst(n):
 # end calloc_lst
 
 # config test
-conf = config(["a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"], 2, 4)
-print(conf)
+# bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
+# bigG = "G = F+a*b"
+# otherG = "G = a+b"
+# conf = config([bigF], 6, 4)
+# print(conf.get_reqs())
+# conf2 = config([bigF, bigG], 6, 4)
+# print(conf2.get_reqs())
+
+# conf3 = config([bigF, bigG, otherG], 8, 4)
+# print(conf3.get_reqs())
