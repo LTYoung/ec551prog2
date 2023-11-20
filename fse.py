@@ -37,24 +37,69 @@ def eprint(*args, **kwargs):
 
 # analyze input equations and determine the order they are routed
 # most complex equations are routed first
-def analyze_eq(eq_adt: list):
+def analyze_eq(eq_adt: list, constraint="free", fpga_adt: fpga = None):
     # get the number of literals and ops in each equation
     # higher generally means more complex
-    complexity = []
-    for each in eq_adt:
-        complexity.append(len(each.literals) + len(each.ops))
 
-    # sort the equations by complexity
-    # the most complex equations are routed first
+    if constraint == "free":
+        complexity = []
+        for each in eq_adt:
+            complexity.append(len(each.literals) + len(each.ops))
 
-    # sort the equations by complexity
-    output = [
-        x
-        for _, x in sorted(
-            zip(complexity, eq_adt), key=lambda pair: pair[0], reverse=True
-        )
-    ]
-    return output
+        # sort the equations by complexity
+        # the most complex equations are routed first
+
+        # sort the equations by complexity
+        output = [
+            x
+            for _, x in sorted(
+                zip(complexity, eq_adt), key=lambda pair: pair[0], reverse=True
+            )
+        ]
+        return output
+    elif constraint == "constrained":
+        # determine the dependency of each equation
+
+        # first append any eq with no dependency
+        output = []
+        fpga_outputs = fpga_adt.get_outputs()
+        for each in eq_adt:
+            oliteral = list(set(each.literals))
+            oliteral.sort()
+            depdendent = False
+            for literal in oliteral:
+                if literal in fpga_outputs:
+                    depdendent = True
+                    break
+            if not depdendent:
+                output.append(each)
+                eq_adt.remove(each)  # so we don't have to iterate through it again
+
+        # then append the rest
+        # starting from the ones with least dependency (just 1)
+        # to the ones with most dependency
+
+        # create an empty layer list that is the same size of eq_adt
+        layer = [0] * len(eq_adt)
+        i = 0
+        for each in eq_adt:
+            oliteral = list(set(each.literals))
+            oliteral.sort()
+            for literal in oliteral:
+                if literal in fpga_outputs:
+                    layer[i] += 1
+            i += 1
+
+        # sort the equations by dependency
+        # the least dependent equations are routed first
+        output += [
+            x
+            for _, x in sorted(
+                zip(layer, eq_adt), key=lambda pair: pair[0], reverse=False
+            )
+        ]
+
+        return output
 
 
 # partitions the truth table of each eq_adt into
@@ -74,7 +119,7 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
     lut_outputs = []
     lut_data = []
 
-    if (len(oliteral) < lut_type):
+    if len(oliteral) < lut_type:
         lut_input_combinations = itertools.combinations(oliteral, len(oliteral))
     else:
         lut_input_combinations = itertools.combinations(oliteral, lut_type)
@@ -87,7 +132,7 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
         if filtered_table:
             lut_index = len(lut_inputs)  # Index for the next LUT
             lut_inputs.append(list(combination))
-            lut_outputs.append(f"LUT_{lut_index}_Output")
+            lut_outputs.append(f"LUT_{eq_adt.name}_{lut_index}_Output")
             relevant_minterms = get_relevant_minterms(
                 combination, num_literals, oliteral, eq_adt.table
             )
@@ -97,13 +142,19 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
             binary_data = adjust_binary_length(binary_data, lut_type)
             lut_data.append(binary_data)
 
-
     # if no muxes are needed, return here
     if len(lut_data) == 1:
         num_luts = 1
         output_lut_name = lut_outputs[0].split("_Output")[0]
-        output_var_name = eq_adt.eq.split("=")[0]
-        return lut_inputs, lut_outputs, lut_data, num_luts, output_lut_name, output_var_name
+        output_var_name = eq_adt.name
+        return (
+            lut_inputs,
+            lut_outputs,
+            lut_data,
+            num_luts,
+            output_lut_name,
+            output_var_name,
+        )
 
     # Determining MUX LUTs
     num_normal_luts = len(lut_inputs)
@@ -116,7 +167,7 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
             lut_outputs[j]
             for j in range(i * lut_type, min((i + 1) * lut_type, num_normal_luts))
         ]
-        mux_outputs = f"MUX_{i}_Output"
+        mux_outputs = f"MUX_{eq_adt.name}_{i}_Output"
         mux_binary_data = generate_mux_data(
             num_select_lines, len(mux_inputs)
         )  # Placeholder, implement the logic based on your MUX design
@@ -126,7 +177,7 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
 
     num_luts = len(lut_outputs)
     output_lut_name = lut_outputs[-1].split("_Output")[0]
-    output_var_name = eq_adt.eq.split("=")[0]
+    output_var_name = eq_adt.name
     return lut_inputs, lut_outputs, lut_data, num_luts, output_lut_name, output_var_name
 
 
@@ -206,7 +257,7 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
                     lut.name = lut_outputs[i].split("_Output")[0]
                     lut.op = eq
                     lut.location = location
-                    lut.data = lut_data
+                    lut.data = lut_data[i]
                     update_fpga_layout(fpga_adt, lut)
                     break
     # route wires
@@ -250,9 +301,16 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
 
 # LUT routing with connection constraints
 def routing_constrained(eq_adt: list, fpga_adt: fpga):
-    sorted_eqs = analyze_eq(eq_adt)  # Analyze and sort equations, placeholder function
+    sorted_eqs = analyze_eq(
+        eq_adt, "constrained", fpga_adt
+    )  # Analyze and sort equations, placeholder function
     lut_ins = []
     lut_outs = []
+    lut_datas = []
+    num_luts = 0
+    output_lut_names = []
+    output_var_names = []
+    output_dict = {}
     for eq in sorted_eqs:
         # Partition each equation into LUTs
         (
@@ -265,15 +323,42 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
         ) = partition_to_lut(eq, fpga_adt.get_lut_type(), fpga_adt)
 
         lut_ins.append(lut_inputs)
-        lut_outs.append(output_var_name)
-    # palce empty LUTs and Wires on the base layer
+        lut_outs.append(lut_outputs)
+        lut_datas.append(lut_data)
+        num_luts += num_luts
+        output_lut_names.append(output_lut_name)
+        output_var_names.append(output_var_name)
+
+        output_dict[output_var_name] = output_lut_name
+    # place wires
+    place_wires(fpga_adt)
+    # place LUTs
+
+    # find depdendency of each LUT
+    # a LUT that is dependent on other LUTs will be ordered after all the LUTs it is dependent on
+
+    find_lut_list = sorted_eqs.copy()
+    for i in range(num_luts):
+        luts_on_fpga = fpga_adt.get_luts()
+        location = find_and_place(fpga_adt, "constrained", "base", "lut", find_lut_list, sorted_eqs)
+        current_eq = find_lut_list.pop(0)
+
+        for lut in luts_on_fpga:
+            if lut.location == []:
+                lut.name = lut_outs[i][0].split("_Output")[0]
+                lut.op = eq
+                lut.location = location
+                lut.data = lut_datas[i]
+                update_fpga_layout(fpga_adt, lut)
+                break
 
 
 def find_and_place(
-    fpga_adt: fpga, constraint: str, target_layer: str, target_type: str
+    fpga_adt: fpga, constraint: str, target_layer: str, target_type: str, remaining_eq:list=None ,eq_adt: list=None
 ):
+    layout = fpga_adt.get_layout()
     if constraint == "free":
-        layout = fpga_adt.get_layout()
+        
         if target_layer == "base":
             # get the base layer
             layout = layout[0]
@@ -300,8 +385,51 @@ def find_and_place(
                     if layout[i][j] == "":
                         return [i, j]
 
-    else:
-        pass
+    elif constraint == "constrained":
+        # first check the types of input to this LUT
+        # if all the inputs are external, it can be placed more towards the left (start of index)
+        # if it is dependent on the output of another LUT, it must be placed behind it
+        if target_layer == "base":
+            # get the base layer
+            layout = layout[0]
+            if target_type == "lut":
+                # get the LUT layer
+                layout = layout[0]
+                oliteral = list(set(remaining_eq[0].literals))
+                oliteral.sort()
+                dependent = {}   # {depdent_var: dependent_var_location}
+
+                for literal in oliteral:
+                    if literal in fpga_adt.get_outputs():
+                        dependent[literal] = find_lut(fpga_adt, literal)
+
+                # if the LUT is not dependent on any other LUTs, place it 
+                # as far left as possible
+
+                if len(dependent) == 0:
+                    # fill vertically first
+                    for j in range(len(layout[0])):
+                        for i in range(len(layout)):
+                            if layout[i][j] == "":
+                                return [i, j]
+                            
+                # if the LUT is dependent on other LUTs, place it on the first
+                # column that is to the rightmost of all the dependent LUTs
+
+                else:
+                    # find the rightmost column
+                    rightmost = 0
+                    for key in dependent:
+                        if dependent[key] > rightmost:
+                            rightmost = dependent[key]
+                    # fill vertically first
+                    for j in range(rightmost, len(layout[0])):
+                        for i in range(len(layout)):
+                            if layout[i][j] == "":
+                                return [i, j]
+
+                
+
 
     return [0, 0]  # Return location as [x, y]
 
@@ -322,6 +450,16 @@ def update_io_layout(fpga_adt, loc, name):
     # fpga_adt.update_layout(layout)
 
 
+def find_lut(fpga_adt, lut_name):
+    layout = fpga_adt.get_layout()
+    lut_layer = layout[0][0]
+    for j in range(len(lut_layer[0])):
+        for i in range(len(lut_layer)):
+            if lut_layer[i][j] == lut_name:
+                return [i, j]
+            
+    return [-1, -1]
+
 def find_io(fpga_adt, name):
     layout = fpga_adt.get_layout()
     io_layer = layout[0][2]
@@ -331,18 +469,50 @@ def find_io(fpga_adt, name):
                 return [i, j]
     return [0, 0]
 
+
 # place wires on base layer every other column
 # (on odd columns)
 def place_wires(fpga_adt):
     layout = fpga_adt.get_layout()
-    wire_layer = layout[0][1]
-    for i in range(len(wire_layer)):
-        for j in range(len(wire_layer[i])):
-            if j % 2 == 1:
-                wire_layer[i][j] = "wire"
-    layout[0][1] = wire_layer
-    fpga_adt.update_layout(layout)
+    wire_layer = layout[0][0]
+    for j in range(len(wire_layer[0])):
+        if j % 2 == 0:
+            for i in range(len(wire_layer)):
+                wire_layer[i][j] = "rud"
+        else:
+            for i in range(len(wire_layer)):
+                if i % 2 == 0:
+                    wire_layer[i][j] = "rud"
+
 
 #
-def fse(fpga_adt: fpga):
+def fse_runner(fpga_adt: fpga):
+    pass
+
+
+def show_lut_assignments(show_all: bool):
+    pass
+
+
+def show_connections():
+    pass
+
+
+def show_i_extern():
+    pass
+
+
+def show_o_extern():
+    pass
+
+
+def load_bitstream(bitstream):
+    pass
+
+
+def write_bitstream(fpga_adt: fpga):
+    pass
+
+
+def show_utilization():
     pass

@@ -7,7 +7,7 @@ import configurator as conf
 
 input0 = "F = a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
 input1 = "G = F+a*b"
-input2 = "G = a+b"
+input2 = "H = a+b"
 
 inputComp = [input0, input1, input2]
 #inputComp = [input1, input2]
@@ -53,4 +53,11 @@ for each in eqts:
 
 
 routed_free = fse.routing_free(eqts, conf0)
-print("Done")
+print("Free done")
+
+
+conf1 = conf.config(inputComp, 50, 4)
+
+
+routed_constrained = fse.routing_constrained(eqts, conf1)
+print("Constrained done")
