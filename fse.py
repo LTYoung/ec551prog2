@@ -67,13 +67,17 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
     oliteral = list(
         set(eq_adt.literals)
     )  # Assuming this gives a list of all possible input literals
+    oliteral.sort()
     num_literals = len(oliteral)
 
     lut_inputs = []
     lut_outputs = []
     lut_data = []
 
-    lut_input_combinations = itertools.combinations(oliteral, lut_type)
+    if (len(oliteral) < lut_type):
+        lut_input_combinations = itertools.combinations(oliteral, len(oliteral))
+    else:
+        lut_input_combinations = itertools.combinations(oliteral, lut_type)
     for combination in lut_input_combinations:
         filtered_table = {
             k: v
@@ -92,6 +96,14 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
             )
             binary_data = adjust_binary_length(binary_data, lut_type)
             lut_data.append(binary_data)
+
+
+    # if no muxes are needed, return here
+    if len(lut_data) == 1:
+        num_luts = 1
+        output_lut_name = lut_outputs[0].split("_Output")[0]
+        output_var_name = eq_adt.eq.split("=")[0]
+        return lut_inputs, lut_outputs, lut_data, num_luts, output_lut_name, output_var_name
 
     # Determining MUX LUTs
     num_normal_luts = len(lut_inputs)
@@ -178,7 +190,7 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
 
         lut_ins.append(lut_inputs)
         lut_outs.append(output_var_name)
-        
+
         # Place LUTs on the FPGA
         for i in range(num_luts):
             # Find the next available location on the FPGA
@@ -201,7 +213,7 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
     # first route inputs and outputs
     # then route the internal connections
 
-    # update fpga_inputs 
+    # update fpga_inputs
     # if a literal does not exist as an output in lut_outs, it is an external input
     external_inputs = []
     for eq in eq_adt:
@@ -222,8 +234,7 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
         location = find_and_place(fpga_adt, "free", "io", "output")
         update_io_layout(fpga_adt, location, output)
 
-
-    # no need to make connections as 
+    # no need to make connections as
     # free routing does not have any constraints
     # repr is done at query by the runner
     # # make connections
@@ -236,10 +247,26 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
     #             input_location = find_io(fpga_adt, input)
     #             pass
 
+
 # LUT routing with connection constraints
-def routing_constrained(eq_adt: list):
-    sorted = analyze_eq(eq_adt)
-    pass
+def routing_constrained(eq_adt: list, fpga_adt: fpga):
+    sorted_eqs = analyze_eq(eq_adt)  # Analyze and sort equations, placeholder function
+    lut_ins = []
+    lut_outs = []
+    for eq in sorted_eqs:
+        # Partition each equation into LUTs
+        (
+            lut_inputs,
+            lut_outputs,
+            lut_data,
+            num_luts,
+            output_lut_name,
+            output_var_name,
+        ) = partition_to_lut(eq, fpga_adt.get_lut_type(), fpga_adt)
+
+        lut_ins.append(lut_inputs)
+        lut_outs.append(output_var_name)
+    # palce empty LUTs and Wires on the base layer
 
 
 def find_and_place(
@@ -284,7 +311,7 @@ def update_fpga_layout(fpga_adt, lut):
     lut_layer = layout[0][0]
     lut_layer[lut.location[0]][lut.location[1]] = lut.name
     layout[0][0] = lut_layer
-    #fpga_adt.update_layout(layout)
+    # fpga_adt.update_layout(layout)
 
 
 def update_io_layout(fpga_adt, loc, name):
@@ -292,7 +319,8 @@ def update_io_layout(fpga_adt, loc, name):
     io_layer = layout[0][2]
     io_layer[loc[0]][loc[1]] = name
     layout[0][2] = io_layer
-    #fpga_adt.update_layout(layout)
+    # fpga_adt.update_layout(layout)
+
 
 def find_io(fpga_adt, name):
     layout = fpga_adt.get_layout()
@@ -302,6 +330,19 @@ def find_io(fpga_adt, name):
             if io_layer[i][j] == name:
                 return [i, j]
     return [0, 0]
+
+# place wires on base layer every other column
+# (on odd columns)
+def place_wires(fpga_adt):
+    layout = fpga_adt.get_layout()
+    wire_layer = layout[0][1]
+    for i in range(len(wire_layer)):
+        for j in range(len(wire_layer[i])):
+            if j % 2 == 1:
+                wire_layer[i][j] = "wire"
+    layout[0][1] = wire_layer
+    fpga_adt.update_layout(layout)
+
 #
 def fse(fpga_adt: fpga):
     pass
