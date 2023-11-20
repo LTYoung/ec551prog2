@@ -26,6 +26,7 @@ import configurator as config
 import logic_synthesis_engine as lse
 import eq_adt as logic
 import fpga_adt as fpga
+import tester
 import json
 
 
@@ -43,8 +44,16 @@ def print_help():
 # end print_help
 
 
-def tests():
-    pass
+def tests(test):
+    if test == 'lse':
+        tester.lse_tester()
+    elif test == 'conf':
+        tester.config_tester()
+    elif test == 'fse':
+        tester.fse_tester()
+    else:
+        print("Error: invalid test")
+        exit(7)
 # end tests
 
 
@@ -122,7 +131,10 @@ def main():
         print_help()
         exit(1)
     if sys.argv[1] == '-t':
-        tests()
+        if len(sys.argv) != 3:
+            print_help()
+            exit(4)
+        tests(sys.argv[2])
         exit(0)
     if sys.argv[1] == '-b':
         if len(sys.argv) != 3:

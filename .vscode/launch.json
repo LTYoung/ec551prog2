@@ -10,8 +10,34 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Test Logic Synthesis Engine",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
             "justMyCode": true,
-            "args": "-h"
+            "args": ["-t", "lse"]
+        },
+        {
+            "name": "Python: Test Configurator",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-t", "conf"]
+        },
+        {
+            "name": "Python: Test FSE",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-t", "fse"]
         },
         {
             "name": "Python: Run App Help",
