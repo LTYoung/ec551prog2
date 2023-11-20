@@ -34,8 +34,8 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     if tLut != 4 and tLut != 6:
         raise Exception("tLut must be 4 or 6")
     if isBitstream:
-        # convert bitstream to json to fpga_adt
-        return
+        # TODO: convert bitstream to json to fpga_adt
+        return -1
     
     data = fpga.fpga_adt()
 
@@ -56,6 +56,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     
     # minimize expression to fit in LUTs
     eq = []
+    req = []
     inputs = []
     rein   = {} # redundant input assignment
     outputs = []
@@ -64,6 +65,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
         # eliminate all spaces
         e = e.replace(' ', '')
         ex = e.split('=')
+        nop = ex[0] # new output name
         if ex[0] not in outputs:
             outputs.append(ex[0])
         else:
@@ -71,10 +73,19 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
                 rein[ex[0]] += 1
             else:
                 rein[ex[0]] = 1
+            nop = ex[0] + str(rein[ex[0]])
             # replace input in expression with redundant input
-            ex[1] = ex[1].replace(ex[0], ex[0] + str(rein[ex[0]]))
-
-        # if existing output is input, replace with equation?
+            
+        # find all instances of rein in e
+        idx = 0
+        while idx < len(ex[1]):
+            for r in rein:
+                if ex[1][idx:idx+len(r)] == r:
+                    if not ex[1][idx+len(r)].isalpha():
+                        # TODO: check if self referential
+                        ex[1] = ex[1][:idx] + r + str(rein[r]) + ex[1][idx+len(r):]
+            idx += 1
+            
 
         # minimize expression
         equ = logic.eq_adt(ex[1])
@@ -83,36 +94,18 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
         equ.update_neglist(neg)
         equ.update_ops(ops)
 
-        # add literals to LUT data
-        # TODO: check for I/O with the same name
-        for l in lit:
-            if l in outputs:
-                # replace input in expression with redundant input
-                continue
-        
-        parts = ex[1].split('+')
-        # check if expression fits in LUT based on number of expressions
-        if len(parts) > nLut:
-            # TODO
-            pass
-        # check if expression fits in LUT based on number of literals in expressions
-        for p in parts:
-            if len(p) > tLut:
-                # TODO
-                pass
-        # double check if expression fits in LUT based on number of expressions
-        if len(eq) > nLut:
-            # TODO
-            pass
-        eq.append(equ)
+        red = lse.synth_engine(equ)
 
+        eq.append(equ)
+        req.append(nop + '=' + red)
     # update ADT
     data.update_inputs(inputs)
     data.update_outputs(outputs)
     data.update_eqs(eq)
+    data.update_reqs(req)
     
     # develop specs
-    r = 2
+    r = 2 + nLut//16
     c = nLut // r
     w = tLut * c-1
     # create layout
@@ -150,9 +143,13 @@ def calloc_lst(n):
 # end calloc_lst
 
 # config test
-bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
-bigG = "G = F+a*b"
-conf = config([bigF], 6, 4)
-print(conf.get_eqs()[0].eq)
-conf2 = config([bigF, bigG], 6, 4)
-print(conf2.get_eqs()[0].eq, conf2.get_eqs()[1].eq)
+# bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
+# bigG = "G = F+a*b"
+# otherG = "G = a+b"
+# conf = config([bigF], 6, 4)
+# print(conf.get_reqs())
+# conf2 = config([bigF, bigG], 6, 4)
+# print(conf2.get_reqs())
+
+# conf3 = config([bigF, bigG, otherG], 8, 4)
+# print(conf3.get_reqs())
