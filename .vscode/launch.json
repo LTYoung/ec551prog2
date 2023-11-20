@@ -1,0 +1,44 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": "-h"
+        },
+        {
+            "name": "Python: Run App Help",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": "-h"
+        },
+        {
+            "name": "Python: Run App Bitstream",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": "-b"
+        },
+        {
+            "name": "Python: Run App Example 1",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/simple3.dat", "4", "4"]
+        }
+    ]
+}
