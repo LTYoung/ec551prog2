@@ -113,8 +113,9 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
         lut_data.append(mux_binary_data)
 
     num_luts = len(lut_outputs)
-
-    return lut_inputs, lut_outputs, lut_data, num_luts
+    output_lut_name = lut_outputs[-1].split("_Output")[0]
+    output_var_name = eq_adt.eq.split("=")[0]
+    return lut_inputs, lut_outputs, lut_data, num_luts, output_lut_name, output_var_name
 
 
 def is_combination_relevant(minterm, combination, num_literals, oliteral):
@@ -134,15 +135,15 @@ def get_relevant_minterms(combination, num_literals, oliteral, table):
 
 
 def generate_mux_data(num_select_lines, num_inputs):
-    binary_data = ""
-    for select_combination in range(2**num_select_lines):
-        # Determine which input is selected by this combination
-        selected_input = select_combination % num_inputs
-        # For each combination, only one input is selected
-        input_state = ["0"] * num_inputs
-        if selected_input < num_inputs:
-            input_state[selected_input] = "1"  # Set '1' for the selected input
-        binary_data += "".join(input_state)
+    binary_data = "MUX_CONFIG_BITS_PLACEHOLDER"
+    # for select_combination in range(2**num_select_lines):
+    #     # Determine which input is selected by this combination
+    #     selected_input = select_combination % num_inputs
+    #     # For each combination, only one input is selected
+    #     input_state = ["0"] * num_inputs
+    #     if selected_input < num_inputs:
+    #         input_state[selected_input] = "1"  # Set '1' for the selected input
+    #     binary_data += "".join(input_state)
 
     return binary_data
 
@@ -162,26 +163,78 @@ def adjust_binary_length(binary_data, lut_type):
 def routing_free(eq_adt: list, fpga_adt: fpga):
     sorted_eqs = analyze_eq(eq_adt)  # Analyze and sort equations, placeholder function
 
+    lut_ins = []
+    lut_outs = []
     for eq in sorted_eqs:
         # Partition each equation into LUTs
-        lut_inputs, lut_outputs, lut_data, num_luts = partition_to_lut(
-            eq, fpga_adt.get_lut_type(), fpga_adt
-        )
+        (
+            lut_inputs,
+            lut_outputs,
+            lut_data,
+            num_luts,
+            output_lut_name,
+            output_var_name,
+        ) = partition_to_lut(eq, fpga_adt.get_lut_type(), fpga_adt)
 
+        lut_ins.append(lut_inputs)
+        lut_outs.append(output_var_name)
+        
         # Place LUTs on the FPGA
         for i in range(num_luts):
             # Find the next available location on the FPGA
-            location = find_next_available_location(fpga_adt)
-            # Create a new LUT object
-            lut = fpga.LUT(f"LUT_{len(fpga_adt.get_luts())}", fpga_adt.get_lut_type())
-            lut.update_location(location)
-            lut.update_connections([])  # No specific connections in free routing
-            lut.data = lut_data[i]  # Assign LUT data
-            # Add the LUT to the FPGA
-            fpga_adt.add_lut(lut)
-            # Update the FPGA layout
-            update_fpga_layout(fpga_adt, lut)
 
+            location = find_and_place(fpga_adt, "free", "base", "lut")
+            # populate a LUT object
+            luts_on_fpga = fpga_adt.get_luts()
+
+            # find the first empty LUT
+            # lut is empty when location = []
+            for lut in luts_on_fpga:
+                if lut.location == []:
+                    lut.name = lut_outputs[i].split("_Output")[0]
+                    lut.op = eq
+                    lut.location = location
+                    lut.data = lut_data
+                    update_fpga_layout(fpga_adt, lut)
+                    break
+    # route wires
+    # first route inputs and outputs
+    # then route the internal connections
+
+    # update fpga_inputs 
+    # if a literal does not exist as an output in lut_outs, it is an external input
+    external_inputs = []
+    for eq in eq_adt:
+        for literal in eq.literals:
+            if literal not in lut_outs:
+                external_inputs.append(literal)
+    #
+    external_inputs = list(set(external_inputs))
+    external_inputs.sort()
+    fpga_adt.update_inputs(external_inputs)
+    for input in external_inputs:
+        # place the input on a free I/O fabric location
+        location = find_and_place(fpga_adt, "free", "io", "input")
+        update_io_layout(fpga_adt, location, input)
+
+    # place outputs
+    for output in fpga_adt.outputs:
+        location = find_and_place(fpga_adt, "free", "io", "output")
+        update_io_layout(fpga_adt, location, output)
+
+
+    # no need to make connections as 
+    # free routing does not have any constraints
+    # repr is done at query by the runner
+    # # make connections
+    # # connect all inputs to the LUTs
+    # # and update these connections to fpga_adt.wire
+    # for lut in fpga_adt.luts:
+    #     lut_index = int(lut.name.split("_")[1])
+    #     for inputs in lut_ins[lut_index]:
+    #         for input in inputs:
+    #             input_location = find_io(fpga_adt, input)
+    #             pass
 
 # LUT routing with connection constraints
 def routing_constrained(eq_adt: list):
@@ -189,18 +242,66 @@ def routing_constrained(eq_adt: list):
     pass
 
 
-def find_next_available_location(fpga_adt):
-    # Placeholder function to find the next available location for a LUT on the FPGA
-    # Implement logic to find an empty space
+def find_and_place(
+    fpga_adt: fpga, constraint: str, target_layer: str, target_type: str
+):
+    if constraint == "free":
+        layout = fpga_adt.get_layout()
+        if target_layer == "base":
+            # get the base layer
+            layout = layout[0]
+            if target_type == "lut":
+                # get the LUT layer
+                layout = layout[0]
+                # fill vertically first
+                for j in range(len(layout[0])):
+                    for i in range(len(layout)):
+                        if layout[i][j] == "":
+                            return [i, j]
+            elif target_type == "wire":
+                # get the wire layer
+                layout = layout[1]
+                for i in range(len(layout)):
+                    for j in range(len(layout[i])):
+                        if layout[i][j] == "":
+                            return [i, j]
+        elif target_layer == "io":
+            layout = layout[0][2]  # the other array is discared
+            # no constraint so just place whereever
+            for j in range(len(layout[0])):
+                for i in range(len(layout)):
+                    if layout[i][j] == "":
+                        return [i, j]
+
+    else:
+        pass
+
     return [0, 0]  # Return location as [x, y]
 
 
 def update_fpga_layout(fpga_adt, lut):
-    # Placeholder function to update the FPGA layout with the new LUT
-    # Implement logic to place the LUT in the layout
-    pass
+    layout = fpga_adt.get_layout()
+    lut_layer = layout[0][0]
+    lut_layer[lut.location[0]][lut.location[1]] = lut.name
+    layout[0][0] = lut_layer
+    #fpga_adt.update_layout(layout)
 
 
+def update_io_layout(fpga_adt, loc, name):
+    layout = fpga_adt.get_layout()
+    io_layer = layout[0][2]
+    io_layer[loc[0]][loc[1]] = name
+    layout[0][2] = io_layer
+    #fpga_adt.update_layout(layout)
+
+def find_io(fpga_adt, name):
+    layout = fpga_adt.get_layout()
+    io_layer = layout[0][2]
+    for i in range(len(io_layer)):
+        for j in range(len(io_layer[i])):
+            if io_layer[i][j] == name:
+                return [i, j]
+    return [0, 0]
 #
 def fse(fpga_adt: fpga):
     pass

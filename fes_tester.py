@@ -19,10 +19,17 @@ print("min: ", lse.synth_engine(eq0))
 analyze_out = fse.analyze_eq([eq0])
 print(analyze_out)
 
-conf0 = conf.config([input0], 500, 4)
+conf0 = conf.config([input0], 50, 4)
 print(conf0.get_eqs()[0].eq)
 
-lut_inputs, lut_outputs, lut_data= fse.partition_to_lut(eq0, conf0.get_lut_type(), conf0)
+(
+    lut_inputs,
+    lut_outputs,
+    lut_data,
+    num_luts,
+    output_lut_name,
+    output_var_name,
+) = fse.partition_to_lut(eq0, conf0.get_lut_type(), conf0)
 
 print("Original table:")
 print(eq0.table)
@@ -32,5 +39,14 @@ print("LUt outputs:")
 print(lut_outputs)
 print("LUT data:")
 print(lut_data)
-# print("MUX output assignments: ")
-# print(mux_out)
+print("Number of LUTs:")
+print(num_luts)
+print("Output LUT name:")
+print(output_lut_name)
+print("Output variable name:")
+print(output_var_name)
+
+#conf0.print_layout()
+
+routed_free = fse.routing_free([eq0], conf0)
+print("Done")
