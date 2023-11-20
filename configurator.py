@@ -95,12 +95,14 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
         equ.update_ops(ops)
 
         red = lse.synth_engine(equ)
+        rep = red.replace('(', '')
+        rep = rep.replace(')', '')
 
         # check if literals lost in minimization for further reduction
-        l, n, o = lse.parser(red)
-        if l != lit:
+        l, n, o = lse.parser(rep)
+        if len(l) != len(lit):
             # redo synthesis with reduced literals
-            equ = logic.eq_adt(red)
+            equ = logic.eq_adt(rep)
             equ.update_literals(l)
             equ.update_neglist(n)
             equ.update_ops(o)
@@ -141,8 +143,6 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
     # fdata is updated fpga_adt
     # ndata reports any problems / LUT usage
     # fdata,ndata = fse.fse()
-
-    # fse.write_bitstream(data)
 
     return (0, data)
 # end config

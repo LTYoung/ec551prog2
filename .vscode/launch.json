@@ -65,6 +65,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["-f", "${workspaceFolder}/examples/simple3.dat", "4", "4"]
+        },
+        {
+            "name": "Python: Run App Example 2",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4var.dat", "12", "4"]
         }
     ]
 }

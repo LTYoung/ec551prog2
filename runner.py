@@ -85,24 +85,16 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
     # open eq_file
     with open(eq_file) as f:
         eqs = f.readlines()
+    f.close()
+    # remove whitespace
+    eqs = [x.strip() for x in eqs]
+
     # TODO: check if eq_file is valid
 
-    # check if conn_file is valid
-    if conn_file != '':
-        # file is json
-        with open(conn_file, 'r', encoding='utf-8') as f:
-            try:
-                reader = f.read()
-                conn = json.loads(reader)
-            except:
-                return 8
-        f.close()
-    else:
-        conn = ''
     # TODO: check if conn_file is valid
 
     # create data
-    ret, data = config.config(eqs, nLut, tLut, conn)
+    ret, data = config.config(eqs, nLut, tLut, conn_file)
 
     # TODO: all detection and generation caused by config
 
@@ -116,8 +108,10 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
     # check LUT usage and report
 
     # fse.show_lut_assignmnets(False)
+    # fse.show_connections()
     # fse.show_i_extern()
     # fse.show_o_extern()
+    # fse.write_bitstream(data)
     # fse.show_utilization()
 
 
@@ -157,9 +151,12 @@ def main():
         nLut = int(sys.argv[3])
         tLut = int(sys.argv[4])
         # get file
-        conn_file = sys.argv[5]
+        if len(sys.argv) == 7:
+            conn_file = sys.argv[5]
+        else:
+            conn_file = ''
         # run fpga synthesis engine
-        foo = get_fpga(eq_file, conn_file, nLut, tLut, cLut)
+        foo = get_fpga(eq_file, conn_file, nLut, tLut)
         # check return code
         match foo:
             case 0: # success
