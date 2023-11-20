@@ -28,6 +28,7 @@ class eq_adt:
         self.neglist = []
         self.ops = []
         self.table = {}
+        self.name = ""
         self.isCircuit = False
 
     # update literals method

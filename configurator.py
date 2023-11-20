@@ -93,6 +93,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
         equ.update_literals(lit)
         equ.update_neglist(neg)
         equ.update_ops(ops)
+        equ.name = nop
 
         red = lse.synth_engine(equ)
 
