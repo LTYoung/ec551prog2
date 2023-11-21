@@ -1,0 +1,10 @@
+A=a*b*c*d*e*f
+B=a*b*c+d*e*f
+C=a*b*c'*d+c*e*f'
+D=g'*h'+i*j'*a*k
+E=k*l*m'+p*e*t
+F=q*r+s*t'*a*n
+G=u*r'+x*q*c+c+r'
+H=a*b*c+a'*b*c+d*e*f
+I=v*a*c+u*u'*m+a
+J=r*o*o'*m+d'*a*d+r+a

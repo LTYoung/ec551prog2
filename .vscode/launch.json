@@ -1,0 +1,121 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Test Logic Synthesis Engine",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-t", "lse"]
+        },
+        {
+            "name": "Python: Test Configurator",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-t", "conf"]
+        },
+        {
+            "name": "Python: Test FSE",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-t", "fse"]
+        },
+        {
+            "name": "Python: Run App Help",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": "-h"
+        },
+        {
+            "name": "Python: Run App Bitstream",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": "-b"
+        },
+        {
+            "name": "Python: Run App Example 1",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/simple3.dat", "4", "4"]
+        },
+        {
+            "name": "Python: Run App Example 4 var ind",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4var.dat", "12", "4"]
+        },
+        {
+            "name": "Python: Run App Example 6 var ind",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_6var.dat", "12", "6"]
+        },
+        {
+            "name": "Python: Run App Example 8 var ind",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_8var.dat", "12", "6"]
+        },
+        {
+            "name": "Python: Run App Example 4 var inter",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "4"]
+        },
+        {
+            "name": "Python: Run App Example 6 var inter",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "6"]
+        },
+        {
+            "name": "Python: Run App Example long",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_lot.dat", "16", "6"]
+        }
+    ]
+}
