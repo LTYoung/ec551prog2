@@ -387,7 +387,6 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
             fpga_adt.io_utilized += 1
 
     # update used IO
-    
 
     for output in fpga_adt.outputs:
         locations = find_and_place(
@@ -398,9 +397,12 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
             fpga_adt.io_utilized += 1
 
     # route internal LUT connections
+    # route from either from input to a LUT, or the input of a LUT to the output to another LUT,
+    # or the output of a LUT to the output
 
+    # route from inputs
 
-    # 
+    #
     fpga_adt.update_utilization()
 
 
@@ -606,12 +608,93 @@ def fse_runner(fpga_adt: fpga):
     pass
 
 
-def show_lut_assignments(show_all: bool):
-    pass
+def show_lut_assignments(
+    fpga_adt: fpga,  # fpga_adt object
+    show_all: bool = True,  # show all LUT assignments if true
+    lut_to_show: str = None,  # should be lut name
+    expr_to_show: str = None,  # should be expression name (F, G, H, etc.)
+):
+    if show_all:
+        print("LUT Assignments:")
+        for lut in fpga_adt.luts:
+            if lut.op != "":
+                print(f"LUT: {lut.name}")
+                print(f"Location: {lut.location}")
+                print(f"Inputs: {lut.inputs}")
+                print(f"Output: {lut.output}")
+                print(f"Data: {lut.data}")
+                print(f"Operation: {lut.op.name} = {lut.op.eq}")
+                print("---------------")
+        print("----END----")
+    elif lut_to_show == True:
+        for lut in fpga_adt.luts:
+            if lut.name == lut_to_show:
+                print(f"LUT: {lut.name}")
+                print(f"Location: {lut.location}")
+                print(f"Inputs: {lut.inputs}")
+                print(f"Output: {lut.output}")
+                print(f"Data: {lut.data}")
+                print(f"Operation: {lut.op.name} = {lut.op.eq}")
+                print("---------------")
+        print("----END----")
+    elif expr_to_show == True:
+        print("Expression: " + expr_to_show + "Utilized LUTs:")
+        for lut in fpga_adt.luts:
+            if lut.op.name == expr_to_show:
+                print(f"LUT: {lut.name}")
+                print(f"Location: {lut.location}")
+                print(f"Inputs: {lut.inputs}")
+                print(f"Output: {lut.output}")
+                print(f"Data: {lut.data}")
+                print(f"Operation: {lut.op.name} = {lut.op.eq}")
+                print("---------------")
+        print("----END----")
+
+    else:
+        eprint("Error: invalid arguments")
 
 
-def show_connections():
-    pass
+def show_connections(fpga_adt: fpga):
+    max_width = 0
+    max_height = 0
+    for row in fpga_adt.layout[0][0]:
+        for elem in row:
+            if isinstance(elem, fpga.LUT):
+                formatted_lut = format_lut_to_print(elem)
+                width = max(len(line) for line in formatted_lut.split("\n"))
+                height = len(formatted_lut.split("\n"))
+                max_width = max(max_width, width)
+                max_height = max(max_height, height)
+            elif elem == "+":
+                max_width = max(max_width, len("-"))
+                max_height = max(max_height, 1)
+            else:
+                max_width = max(max_width, len(elem))
+                max_height = max(max_height, 1)
+
+    # Print each element with padding for width and height
+    for row in fpga_adt.layout[0][0]:
+        for elem in row:
+            if isinstance(elem, fpga.LUT):
+                formatted_lut = format_lut_to_print(elem)
+                padded_lut = formatted_lut.split("\n") + [" " * max_width] * (
+                    max_height - len(formatted_lut.split("\n"))
+                )
+                for line in padded_lut:
+                    print(line.ljust(max_width), end=" | ")
+                print()
+            elif elem == "+":
+                print(("-" * max_width).ljust(max_width), end=" | ")
+            else:
+                print(
+                    (elem + " " * (max_width - len(elem))).ljust(max_width), end=" | "
+                )
+        print()
+
+
+def format_lut_to_print(lut: fpga.LUT):
+    attributes = [f"{lut.name}"]
+    return "\n".join(attributes)
 
 
 def show_i_extern():
@@ -621,14 +704,49 @@ def show_i_extern():
 def show_o_extern():
     pass
 
-
-def load_bitstream(bitstream):
-    pass
-
-
+# dump fpga_adt to json
 def write_bitstream(fpga_adt: fpga):
-    pass
+    bitsteram = json.dumps(fpga_adt, default=lambda o: o.__dict__, indent=4)
+    return bitsteram
+
+# read json to fpga_adt
+def load_bitstream(bitstream):
+    with open(bitstream) as file:
+        data = file.read()
+    fpga_adt = json.loads(data, object_hook=lambda d: fpga.fpga_adt(**d))
+    return fpga_adt
 
 
-def show_utilization():
+
+
+def show_utilization(fpga_adt: fpga):
+    print("-----------------------------------------------------")
+    print("FPGA Resource Utilizations")
+    print("-----------------------------------------------------")
+
+    print("Lookup Table Utliziations: ")
+    print("Total in Layout: " + str(len(fpga_adt.luts)))
+    print("Used: " + str(fpga_adt.luts_utilized))
+    print("Remaining: " + str(len(fpga_adt.luts) - fpga_adt.luts_utilized))
+    print("Utilization Rate: " + str(fpga_adt.luts_utilized / len(fpga_adt.luts)))
+    print("*****************************")
+    print("I/O Fabric Utiliziations: ")
+    print("Total Units: " + str(len(fpga_adt.layout[0][2])))
+    print("Used: " + str(fpga_adt.io_utilized))
+    print("Remaining: " + str(len(fpga_adt.layout[0][2]) - fpga_adt.io_utilized))
+    print("Utilization Rate: " + str(fpga_adt.io_utilized / len(fpga_adt.layout[0][2])))
+    print("*****************************")
+    print("Memory Required: ")
+    print("Total: " + str(len(fpga_adt.luts) * 64) + " bits")
+    print("*****************************")
+    num_muxes = 0
+    for lut in fpga_adt.luts:
+        if lut.name.startswith("MUX"):
+            num_muxes += 1
+    print(
+        "LUTs that can be reduced by utilizing Multiplexer hardware: " + str(num_muxes)
+    )
+
+    print("-----------------------------------------------------")
+
     pass

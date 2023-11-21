@@ -62,3 +62,12 @@ conf1 = conf.config(inputComp, 50, 4)
 
 routed_constrained = fse.routing_constrained(eqts, conf1)
 print("Constrained done")
+fse.show_lut_assignments(conf1, True)
+#fse.show_connections(conf1)
+fse.show_utilization(conf1)
+bitstream = fse.write_bitstream(conf1)
+# write to file
+f = open("bitstream.json", "w")
+f.write(bitstream)
+conf_read = fpga.fpga_adt.load_bitstream("./bitstream.json")
+fse.show_lut_assignments(conf_read, True)
