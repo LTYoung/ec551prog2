@@ -89,9 +89,7 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
     # remove whitespace
     eqs = [x.strip() for x in eqs]
 
-    # TODO: check if eq_file is valid
-
-    # TODO: check if conn_file is valid
+    # TODO: check if eq_file is valid (assuming it is for now)
 
     # create data
     ret, data = config.config(eqs, nLut, tLut, conn_file)

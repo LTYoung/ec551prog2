@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -67,7 +64,7 @@
             "args": ["-f", "${workspaceFolder}/examples/simple3.dat", "4", "4"]
         },
         {
-            "name": "Python: Run App Example 4 var",
+            "name": "Python: Run App Example 4 var ind",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/runner.py",
@@ -76,13 +73,49 @@
             "args": ["-f", "${workspaceFolder}/examples/example_4var.dat", "12", "4"]
         },
         {
-            "name": "Python: Run App Example 6 var",
+            "name": "Python: Run App Example 6 var ind",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/runner.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["-f", "${workspaceFolder}/examples/example_6var.dat", "12", "6"]
+        },
+        {
+            "name": "Python: Run App Example 8 var ind",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_8var.dat", "12", "6"]
+        },
+        {
+            "name": "Python: Run App Example 4 var inter",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "4"]
+        },
+        {
+            "name": "Python: Run App Example 6 var inter",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "6"]
+        },
+        {
+            "name": "Python: Run App Example long",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_lot.dat", "16", "6"]
         }
     ]
 }
