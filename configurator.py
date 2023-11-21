@@ -97,6 +97,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
         red = lse.synth_engine(equ)
         rep = red.replace('(', '')
         rep = rep.replace(')', '')
+        rep = rep.replace(' ', '')
 
         # check if literals lost in minimization for further reduction
         l, n, o = lse.parser(rep)

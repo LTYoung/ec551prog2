@@ -64,6 +64,9 @@ def config_tester():
 
     conf5 = config.config([bigH, IwithH], 4, 4)
     print(conf5[1].get_reqs())
+
+    conf6 = config.config([bigF, bigG, bigH], 8, 4)
+    print(conf6[1].get_reqs())
 # end config_tester
 
 

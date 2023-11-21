@@ -67,13 +67,22 @@
             "args": ["-f", "${workspaceFolder}/examples/simple3.dat", "4", "4"]
         },
         {
-            "name": "Python: Run App Example 2",
+            "name": "Python: Run App Example 4 var",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/runner.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["-f", "${workspaceFolder}/examples/example_4var.dat", "12", "4"]
+        },
+        {
+            "name": "Python: Run App Example 6 var",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_6var.dat", "12", "6"]
         }
     ]
 }
