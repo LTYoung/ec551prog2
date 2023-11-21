@@ -683,7 +683,7 @@ def show_connections(fpga_adt):
             elif elem == "+":
                 print("--↑↓-->".ljust(max_width), end="  |> ")
             else:
-                
+
                 print(elem.ljust(max_width), end="  |> ")
         print()
 

@@ -178,7 +178,7 @@ class fpga_adt:
                 lut_instance.location = lut_data.get("location", [])
                 lut_instance.connections = lut_data.get("connections", [])
                 lut_instance.data = lut_data.get("data", {})
-                lut_list.append(lut_instance)
+                
 
         # replace the fpga's lut list with the reconstructed lut list
         #fpga_instance.luts = lut_list
@@ -188,6 +188,12 @@ class fpga_adt:
                 setattr(fpga_instance, key, value)
 
         fpga_instance.fromBitstream = True
+
+        # manually replace LUTs onto layouts
+        for lut in fpga_instance.luts:
+            loc = lut.get_location()
+            if loc != []:
+                fpga_instance.layout[0][0][loc[0]][loc[1]] = lut
 
         return fpga_instance
 
