@@ -606,7 +606,7 @@ def place_wires(fpga_adt):
 
 #
 def fse_runner(fpga_adt: fpga):
-    pass
+    pass 
 
 
 def show_lut_assignments(
@@ -655,46 +655,60 @@ def show_lut_assignments(
         eprint("Error: invalid arguments")
 
 
-def show_connections(fpga_adt: fpga):
+def show_connections(fpga_adt):
     max_width = 0
-    max_height = 0
-    for row in fpga_adt.layout[0][0]:
-        for elem in row:
-            if isinstance(elem, fpga.LUT):
-                formatted_lut = format_lut_to_print(elem)
-                width = max(len(line) for line in formatted_lut.split("\n"))
-                height = len(formatted_lut.split("\n"))
-                max_width = max(max_width, width)
-                max_height = max(max_height, height)
-            elif elem == "+":
-                max_width = max(max_width, len("-"))
-                max_height = max(max_height, 1)
-            else:
-                max_width = max(max_width, len(elem))
-                max_height = max(max_height, 1)
 
-    # Print each element with padding for width and height
+    print("FPGA Layouts")
+    print("--------------------------------------------------------------------------------------------------------")
+    print("Base Layer: ")
+    # Calculate max width
+    for row in fpga_adt.layout[0][0]:
+        for elem in row:
+            if isinstance(elem, fpga.LUT):
+                width = len(format_lut_to_print(elem))
+            elif elem == "+":
+                width = len("--↑↓-->")
+            else:
+                width = len(elem)
+
+            max_width = max(max_width, width)
+
+    # Print with padding
     for row in fpga_adt.layout[0][0]:
         for elem in row:
             if isinstance(elem, fpga.LUT):
                 formatted_lut = format_lut_to_print(elem)
-                padded_lut = formatted_lut.split("\n") + [" " * max_width] * (
-                    max_height - len(formatted_lut.split("\n"))
-                )
-                for line in padded_lut:
-                    print(line.ljust(max_width), end=" | ")
-                print()
+                print(formatted_lut.ljust(max_width), end="  |> ")
             elif elem == "+":
-                print(("-" * max_width).ljust(max_width), end=" | ")
+                print("--↑↓-->".ljust(max_width), end="  |> ")
             else:
-                print(
-                    (elem + " " * (max_width - len(elem))).ljust(max_width), end=" | "
-                )
+                print(elem.ljust(max_width), end="  |> ")
         print()
 
+    print("********************************************************************************************************")
+    print("I/O Layer: ")
+    # Calculate max width
+    for row in fpga_adt.layout[0][2]:
+        for elem in row:
+            if elem == "":
+                width = len("Empty")
+            else:
+                width = len(elem)
 
+            max_width = max(max_width, width)
+
+    # Print with padding
+    for row in fpga_adt.layout[0][2]:
+        for elem in row:
+            if elem == "":
+                print("      ".ljust(max_width), end="  |> ")
+            else:
+                print(elem.ljust(max_width), end="  |> ")
+        print()
 def format_lut_to_print(lut: fpga.LUT):
     attributes = [f"{lut.name}"]
+    if attributes[0] == "":
+        attributes[0] = "Empty LUT"
     return "\n".join(attributes)
 
 
@@ -707,10 +721,11 @@ def show_i_extern(fpga_adt: fpga):
         for location in locations:
             print(f"Location on the I/O Farbic: {location}")
 
-            print(f"Connected to Wire: {fpga_adt.layout[0][0][location[0]][location[1]]}, Location on the FPGA: {location}")
+            print(
+                f"Connected to Wire: {fpga_adt.layout[0][0][location[0]][location[1]]}, Location on the FPGA: {location}"
+            )
         print("---------------")
     print("----END----")
-    
 
 
 def show_o_extern(fpga_adt: fpga):
@@ -720,14 +735,18 @@ def show_o_extern(fpga_adt: fpga):
         locations = find_io(fpga_adt, output)
         for location in locations:
             print(f"Location on the I/O Farbic: {location}")
-            print(f"Connected from Wire: {fpga_adt.layout[0][0][location[0]][location[1]]}, Location on the FPGA: {location}")
+            print(
+                f"Connected from Wire: {fpga_adt.layout[0][0][location[0]][location[1]]}, Location on the FPGA: {location}"
+            )
         print("---------------")
     print("----END----")
+
 
 # dump fpga_adt to json
 def write_bitstream(fpga_adt: fpga):
     bitsteram = json.dumps(fpga_adt, default=lambda o: o.__dict__, indent=4)
     return bitsteram
+
 
 # read json to fpga_adt
 def load_bitstream(bitstream):
@@ -735,8 +754,6 @@ def load_bitstream(bitstream):
         data = file.read()
     fpga_adt = json.loads(data, object_hook=lambda d: fpga.fpga_adt(**d))
     return fpga_adt
-
-
 
 
 def show_utilization(fpga_adt: fpga):
