@@ -306,11 +306,10 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
     )  # Analyze and sort equations, placeholder function
     lut_ins = []
     lut_outs = []
-    lut_datas = []
-    num_luts = 0
-    output_lut_names = []
-    output_var_names = []
+
     output_dict = {}
+    place_wires(fpga_adt)
+    find_lut_list = sorted_eqs.copy()
     for eq in sorted_eqs:
         # Partition each equation into LUTs
         (
@@ -323,42 +322,50 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
         ) = partition_to_lut(eq, fpga_adt.get_lut_type(), fpga_adt)
 
         lut_ins.append(lut_inputs)
-        lut_outs.append(lut_outputs)
-        lut_datas.append(lut_data)
-        num_luts += num_luts
-        output_lut_names.append(output_lut_name)
-        output_var_names.append(output_var_name)
+        lut_outs.append(output_var_name)
 
         output_dict[output_var_name] = output_lut_name
-    # place wires
-    place_wires(fpga_adt)
-    # place LUTs
+        # place wires
 
-    # find depdendency of each LUT
-    # a LUT that is dependent on other LUTs will be ordered after all the LUTs it is dependent on
+        # place LUTs
 
-    find_lut_list = sorted_eqs.copy()
-    for i in range(num_luts):
-        luts_on_fpga = fpga_adt.get_luts()
-        location = find_and_place(fpga_adt, "constrained", "base", "lut", find_lut_list, sorted_eqs)
-        current_eq = find_lut_list.pop(0)
+        # find depdendency of each LUT
+        # a LUT that is dependent on other LUTs will be ordered after all the LUTs it is dependent on
 
-        for lut in luts_on_fpga:
-            if lut.location == []:
-                lut.name = lut_outs[i][0].split("_Output")[0]
-                lut.op = eq
-                lut.location = location
-                lut.data = lut_datas[i]
-                update_fpga_layout(fpga_adt, lut)
-                break
+        for i in range(num_luts):
+            location = find_and_place(
+                fpga_adt,
+                "constrained",
+                "base",
+                "lut",
+                find_lut_list,
+                sorted_eqs,
+                output_dict,
+            )
+            luts_on_fpga = fpga_adt.get_luts()
+
+            for lut in luts_on_fpga:
+                if lut.location == []:
+                    lut.name = lut_outputs[i].split("_Output")[0]
+                    lut.op = eq
+                    lut.location = location
+                    lut.data = lut_data[i]
+                    update_fpga_layout(fpga_adt, lut)
+                    break
+        find_lut_list.pop(0)
 
 
 def find_and_place(
-    fpga_adt: fpga, constraint: str, target_layer: str, target_type: str, remaining_eq:list=None ,eq_adt: list=None
+    fpga_adt: fpga,
+    constraint: str,
+    target_layer: str,
+    target_type: str,
+    remaining_eq: list = None,
+    eq_adt=None,
+    dependency_dict=None,
 ):
     layout = fpga_adt.get_layout()
     if constraint == "free":
-        
         if target_layer == "base":
             # get the base layer
             layout = layout[0]
@@ -397,13 +404,15 @@ def find_and_place(
                 layout = layout[0]
                 oliteral = list(set(remaining_eq[0].literals))
                 oliteral.sort()
-                dependent = {}   # {depdent_var: dependent_var_location}
-
+                dependent = {}  # {depdent_var: dependent_var_location}
+                out_vars = fpga_adt.get_outputs()
                 for literal in oliteral:
-                    if literal in fpga_adt.get_outputs():
-                        dependent[literal] = find_lut(fpga_adt, literal)
+                    if literal in out_vars:
+                        dependent[literal] = find_lut(
+                            fpga_adt, literal, dependency_dict
+                        )
 
-                # if the LUT is not dependent on any other LUTs, place it 
+                # if the LUT is not dependent on any other LUTs, place it
                 # as far left as possible
 
                 if len(dependent) == 0:
@@ -412,7 +421,7 @@ def find_and_place(
                         for i in range(len(layout)):
                             if layout[i][j] == "":
                                 return [i, j]
-                            
+
                 # if the LUT is dependent on other LUTs, place it on the first
                 # column that is to the rightmost of all the dependent LUTs
 
@@ -420,16 +429,13 @@ def find_and_place(
                     # find the rightmost column
                     rightmost = 0
                     for key in dependent:
-                        if dependent[key] > rightmost:
-                            rightmost = dependent[key]
+                        if dependent[key][1] > rightmost:
+                            rightmost = dependent[key][1]
                     # fill vertically first
-                    for j in range(rightmost, len(layout[0])):
+                    for j in range(rightmost + 1, len(layout[0])):
                         for i in range(len(layout)):
                             if layout[i][j] == "":
                                 return [i, j]
-
-                
-
 
     return [0, 0]  # Return location as [x, y]
 
@@ -450,15 +456,17 @@ def update_io_layout(fpga_adt, loc, name):
     # fpga_adt.update_layout(layout)
 
 
-def find_lut(fpga_adt, lut_name):
+def find_lut(fpga_adt, lut_name, dependency_dict):
     layout = fpga_adt.get_layout()
     lut_layer = layout[0][0]
     for j in range(len(lut_layer[0])):
         for i in range(len(lut_layer)):
-            if lut_layer[i][j] == lut_name:
+            target = dependency_dict[lut_name]
+            if lut_layer[i][j] == target:
                 return [i, j]
-            
+
     return [-1, -1]
+
 
 def find_io(fpga_adt, name):
     layout = fpga_adt.get_layout()

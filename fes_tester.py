@@ -8,6 +8,7 @@ import configurator as conf
 input0 = "F = a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
 input1 = "G = F+a*b"
 input2 = "H = a+b"
+input3 = "I = G*H"
 
 inputComp = [input0, input1, input2]
 #inputComp = [input1, input2]
