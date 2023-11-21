@@ -282,11 +282,13 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
         # place the input on a free I/O fabric location
         locations = find_and_place(fpga_adt, "free", "io", "input")
         update_io_layout(fpga_adt, location, input)
+        fpga_adt.io_utilized += 1
 
     # place outputs
     for output in fpga_adt.outputs:
         location = find_and_place(fpga_adt, "free", "io", "output")
         update_io_layout(fpga_adt, location, output)
+        fpga_adt.io_utilized += 1
 
     # no need to make connections as
     # free routing does not have any constraints
@@ -300,6 +302,8 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
     #         for input in inputs:
     #             input_location = find_io(fpga_adt, input)
     #             pass
+
+    fpga_adt.update_utilization()
 
 
 # LUT routing with connection constraints
@@ -380,11 +384,24 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
         )
         for location in locations:
             update_io_layout(fpga_adt, location, input)
+            fpga_adt.io_utilized += 1
+
+    # update used IO
+    
 
     for output in fpga_adt.outputs:
-        locations = find_and_place(fpga_adt, "constrained", "io", "output", output_name=output)
+        locations = find_and_place(
+            fpga_adt, "constrained", "io", "output", output_name=output
+        )
         for location in locations:
             update_io_layout(fpga_adt, location, output)
+            fpga_adt.io_utilized += 1
+
+    # route internal LUT connections
+
+
+    # 
+    fpga_adt.update_utilization()
 
 
 def find_and_place(
@@ -506,9 +523,7 @@ def find_and_place(
                 target_column = []
                 for j in range(len(layout[0])):
                     for i in range(len(layout)):
-                        if isinstance(
-                            base[i][j], fpga.LUT
-                        ): 
+                        if isinstance(base[i][j], fpga.LUT):
                             this_lut = base[i][j]
 
                             for lut in fpga_adt.luts:
@@ -529,7 +544,6 @@ def find_and_place(
                             break
                 return output_assignments
 
-                            
     return [0, 0]  # Return location as [x, y]
 
 

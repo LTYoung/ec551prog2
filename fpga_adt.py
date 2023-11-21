@@ -19,6 +19,8 @@ class fpga_adt:
         self.eqs = []
         self.reqs = []
         self.fromBitstream = False
+        self.luts_utilized = 0
+        self.io_utilized = 0
     # end __init__
 
     def update_layout(self, layout):
@@ -117,6 +119,14 @@ class fpga_adt:
     def add_req(self, req):
         self.reqs.append(req)
     # end add_req
+
+
+    def update_utilization(self):
+        num_luts_used = 0
+        for lut in self.luts:
+            if lut.get_op() != '':
+                num_luts_used += 1
+        self.luts_utilized = num_luts_used
 
 # end fpga_adt
 
