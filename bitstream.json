@@ -812,7 +812,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     {
@@ -1683,7 +1683,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -2510,7 +2510,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -3337,7 +3337,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -4164,7 +4164,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -4990,7 +4990,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100010001100010"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -11250,7 +11250,7 @@
                             3
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -11816,7 +11816,7 @@
                             3
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -12382,7 +12382,7 @@
                             3
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -17537,7 +17537,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     {
@@ -18408,7 +18408,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -19235,7 +19235,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -20062,7 +20062,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -20889,7 +20889,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -21715,7 +21715,7 @@
                             5
                         ],
                         "connections": [],
-                        "data": "100010001100010"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -27975,7 +27975,7 @@
                             3
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -28541,7 +28541,7 @@
                             3
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -29107,7 +29107,7 @@
                             3
                         ],
                         "connections": [],
-                        "data": "100001000010000"
+                        "data": "MUX_CONFIG_BITS_PLACEHOLDER"
                     },
                     "+",
                     "",
@@ -42903,7 +42903,7 @@
                 3
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_1",
@@ -43165,7 +43165,7 @@
                 3
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_2",
@@ -43427,7 +43427,7 @@
                 3
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_3",
@@ -43689,7 +43689,7 @@
                 5
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_4",
@@ -43951,7 +43951,7 @@
                 5
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_5",
@@ -44213,7 +44213,7 @@
                 5
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_6",
@@ -44475,7 +44475,7 @@
                 5
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_7",
@@ -44737,7 +44737,7 @@
                 5
             ],
             "connections": [],
-            "data": "100001000010000"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "MUX_F_8",
@@ -44998,7 +44998,7 @@
                 5
             ],
             "connections": [],
-            "data": "100010001100010"
+            "data": "MUX_CONFIG_BITS_PLACEHOLDER"
         },
         {
             "name": "LUT_H_0",
