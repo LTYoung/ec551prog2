@@ -26,7 +26,7 @@ To execute using equations: `python runner.py -f <inputs>` The inputs must be in
   - POS equations must start with parenthesis
 - nLut: number of LUTs in the synthesized FPGA
 - tLut: type of LUT (4 or 6)
-- cLut: *.json file representing a partially connected LUT (optional)
+- cLut: if is constrained
 
 Example equation files are located in the _examples_ directory.
 
@@ -72,6 +72,9 @@ eq_adt.py
 
 fpga_adt.py
 - contains the class implementation to hold relevant FPGA and LUT data
+
+fse.py
+- contains the synthesis engine
 
 logic_synthesis_engine.py
 - the synthesis engine used to parse equations and output requested information
