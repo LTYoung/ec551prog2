@@ -24,6 +24,7 @@ import os
 import sys
 import configurator as config
 import logic_synthesis_engine as lse
+import fse
 import eq_adt as logic
 import fpga_adt as fpga
 import tester
@@ -63,6 +64,11 @@ def bitstream(bs_file):
         return 2
     ret, data = config.config('foo', -1, -1, '', bs_file)
     # TODO: all detection and generation caused by config
+
+
+
+
+
     if ret == -1: # WIP so currently always returns -1
         return 9
     runner(data)
@@ -96,11 +102,12 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
     ret, data = config.config(eqs, nLut, tLut, conn_file)
 
     # TODO: all detection and generation caused by config
+    
 
     # check if data is valid
     # TODO: use correct return codes
     if ret != 0:
-        print("panic")
+        # print("panic")
         return 9
 
     runner(data)
