@@ -6,17 +6,19 @@
 # Configures the data for the FPGA synthesis engine
 ################################################
 # TODO:
-# - convert bitstream to fpga_adt
-# - implement fse infrastructure when pushed to main
+# - convert bitstream to json to fpga_adt
+# - minimize expression
+# - convert data to fpga_adt
+# - define partially connected LUTs file
 ################################################
 # methods:
 # config()
 ################################################
 
 import logic_synthesis_engine as lse
-# import fse
 import eq_adt as logic
 import fpga_adt as fpga
+import json
 
 
 ''' config
@@ -26,15 +28,14 @@ inputs:
 - nLuts: number of LUTs - number > 0
 - tLut: number of inputs per LUT - 4 or 6
 - cLut: connectivity of LUTs - fully or partially connected
-- bitstream: bitstream file
+- isBitstream: boolean to determine if bitstream
 '''
-def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
-    if bitstream:
-        # TODO: implement when pushed to main
-        # fse.load_bitstream(bitstream)
-        return (-1, None)
+def config(expr: list, nLut: int, tLut: int, cLut='', isBitstream=False):
     if tLut != 4 and tLut != 6:
         raise Exception("tLut must be 4 or 6")
+    if isBitstream:
+        # TODO: convert bitstream to json to fpga_adt
+        return -1
     
     data = fpga.fpga_adt()
 
@@ -73,8 +74,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
             else:
                 rein[ex[0]] = 1
             nop = ex[0] + str(rein[ex[0]])
-            outputs.append(nop)
-            # TODO: replace input in expression with redundant input
+            # replace input in expression with redundant input
             
         # find all instances of rein in e
         idx = 0
@@ -88,32 +88,14 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
             
 
         # minimize expression
-        
-        # check if POS or SOP
-        pos = False
-        if ex[1][0] == '(':
-            pos = True
-
         equ = logic.eq_adt(ex[1])
-        lit, neg, ops = lse.parser(ex[1], pos=pos)
+        lit, neg, ops = lse.parser(ex[1])
         equ.update_literals(lit)
         equ.update_neglist(neg)
         equ.update_ops(ops)
+        equ.name = nop
 
         red = lse.synth_engine(equ)
-        rep = red.replace('(', '')
-        rep = rep.replace(')', '')
-        rep = rep.replace(' ', '')
-
-        # check if literals lost in minimization for further reduction
-        l, n, o = lse.parser(rep)
-        if len(l) != len(lit):
-            # redo synthesis with reduced literals
-            equ = logic.eq_adt(rep)
-            equ.update_literals(l)
-            equ.update_neglist(n)
-            equ.update_ops(o)
-            red = lse.synth_engine(equ)
 
         eq.append(equ)
         req.append(nop + '=' + red)
@@ -122,6 +104,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
     data.update_outputs(outputs)
     data.update_eqs(eq)
     data.update_reqs(req)
+    data.update_lut_type(tLut)
     
     # develop specs
     r = 2 + nLut//16
@@ -151,5 +134,24 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
     # ndata reports any problems / LUT usage
     # fdata,ndata = fse.fse()
 
-    return (0, data)
+    return data
 # end config
+
+''' calloc_lst
+generate a list of zeros of length n
+'''
+def calloc_lst(n):
+    return [0 for i in range(n)]
+# end calloc_lst
+
+# config test
+# bigF = "F=a*b*c*d*e*f*g + a*b*c*d*e'*f*g + a*b*c*d*e*f'*g + a'*b*c*d*e*f*g' + b*c*d*e*f + c*f'"
+# bigG = "G = F+a*b"
+# otherG = "G = a+b"
+# conf = config([bigF], 6, 4)
+# print(conf.get_reqs())
+# conf2 = config([bigF, bigG], 6, 4)
+# print(conf2.get_reqs())
+
+# conf3 = config([bigF, bigG, otherG], 8, 4)
+# print(conf3.get_reqs())
