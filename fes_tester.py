@@ -22,7 +22,7 @@ inputComp = [input0, input1, input2]
 # print("min: ", lse.synth_engine(eq0))
 
 
-conf0 = conf.config(inputComp, 50, 4)
+conf0 = conf.config(inputComp, 50, 4)[1]
 
 eqts = conf0.eqs
 
@@ -53,14 +53,14 @@ for each in eqts:
     print(output_var_name)
 
 
-routed_free = fse.routing_free(eqts, conf0)
+fse.routing_free(eqts, conf0)
 print("Free done")
 
 
-conf1 = conf.config(inputComp, 50, 4)
+conf1 = conf.config(inputComp, 50, 4)[1]
 
 
-routed_constrained = fse.routing_constrained(eqts, conf1)
+fse.routing_constrained(eqts, conf1)
 print("Constrained done")
 fse.show_lut_assignments(conf1, True)
 fse.show_connections(conf1)
@@ -73,3 +73,5 @@ f = open("bitstream.json", "w")
 f.write(bitstream)
 conf_read = fpga.fpga_adt.load_bitstream("./bitstream.json")
 fse.show_lut_assignments(conf_read, True)
+fse.show_connections(conf_read)
+

@@ -24,6 +24,7 @@ class fpga_adt:
         self.fromBitstream = False
         self.luts_utilized = 0
         self.io_utilized = 0
+        self.constrained = False
 
     # end __init__
 
@@ -161,7 +162,7 @@ class fpga_adt:
             data = json.load(file)
 
         fpga_instance = cls()
-
+        lut_list = []
         # Reconstruct LUT objects
         if "luts" in data:
             fpga_instance.luts = [
@@ -177,7 +178,10 @@ class fpga_adt:
                 lut_instance.location = lut_data.get("location", [])
                 lut_instance.connections = lut_data.get("connections", [])
                 lut_instance.data = lut_data.get("data", {})
+                lut_list.append(lut_instance)
 
+        # replace the fpga's lut list with the reconstructed lut list
+        #fpga_instance.luts = lut_list
         # Set other attributes
         for key, value in data.items():
             if key != "luts" and hasattr(fpga_instance, key):

@@ -42,19 +42,23 @@ def print_help():
     print("\tnLut: int > 0")
     print("\ttLut: int 4 or 6")
     print("\tcLut: input file (optional)")
+
+
 # end print_help
 
 
 def tests(test):
-    if test == 'lse':
+    if test == "lse":
         tester.lse_tester()
-    elif test == 'conf':
+    elif test == "conf":
         tester.config_tester()
-    elif test == 'fse':
+    elif test == "fse":
         tester.fse_tester()
     else:
         print("Error: invalid test")
         exit(7)
+
+
 # end tests
 
 
@@ -62,17 +66,11 @@ def bitstream(bs_file):
     # check if bs_file exists
     if not os.path.isfile(bs_file):
         return 2
-    ret, data = config.config('foo', -1, -1, '', bs_file)
-    # TODO: all detection and generation caused by config
-
-
-
-
-
-    if ret == -1: # WIP so currently always returns -1
-        return 9
-    runner(data)
+    config = fpga.fpga_adt.load_bitstream(bs_file)
+    runner(config)
     return 0
+
+
 # end bitstream
 
 
@@ -81,7 +79,7 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
     if not os.path.isfile(eq_file):
         return 2
     # check if conn_file exists
-    if conn_file != '' and not os.path.isfile(conn_file):
+    if conn_file != "" and not os.path.isfile(conn_file):
         return 3
     # check if tLut is valid
     if tLut != 4 and tLut != 6:
@@ -102,7 +100,6 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
     ret, data = config.config(eqs, nLut, tLut, conn_file)
 
     # TODO: all detection and generation caused by config
-    
 
     # check if data is valid
     # TODO: use correct return codes
@@ -110,15 +107,39 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
         # print("panic")
         return 9
 
+    eqts = data.eqs
+
+    for each in eqts:
+        (
+            lut_inputs,
+            lut_outputs,
+            lut_data,
+            num_luts,
+            output_lut_name,
+            output_var_name,
+        ) = fse.partition_to_lut(each, data.get_lut_type(), data)
+
+    if data.constrained:
+        routed = fse.routing_constrained(eqts, data)
+    elif not data.constrained:
+        routed = fse.routing_free(eqts, data)
+    else:
+        return 9
+
     runner(data)
     return 0
+
+
 # end get_fpga
+
 
 def get_user_input():
     # get user input
     print("Your input:")
     user_input = input()
     return user_input
+
+
 # end get_user_input
 
 
@@ -126,56 +147,57 @@ def runner(data: fpga.fpga_adt):
     while True:
         input = get_user_input()
 
-        if input == 'exit':
+        if input == "exit":
             break
-        elif input == 'f':
-            pass
-        elif input[0] == 'f' and input[1] == ' ':
-            a = input.split(' ')
+        elif input == "f":
+            fse.show_lut_assignments(data, True)
+        elif input[0] == "f" and input[1] == " ":
+            a = input.split(" ")
             a.pop(0)
-            pass
-        elif input == 'c':
-            pass
-        elif input == 'i':
-            pass
-        elif input == 'o':
-            pass
-        elif input == 'b':
-            pass
-        elif input == 'r':
-            pass
+            fse.show_lut_assignments(data, False, a)
+        elif input == "c":
+            fse.show_connections(data)
+        elif input == "i":
+            fse.show_i_extern(data)
+        elif input == "o":
+            fse.show_o_extern(data)
+        elif input == "b":
+            fse.write_bitstream(data)
+        elif input == "r":
+            fse.show_utilization(data)
         else:
             print("Error: invalid input")
-# end get_outs
 
+
+# end get_outs
 
 
 def main():
     if len(sys.argv) < 2 or len(sys.argv) > 8:
         print_help()
         exit(1)
-    if sys.argv[1] == '-t':
+    if sys.argv[1] == "-t":
         if len(sys.argv) != 3:
             print_help()
             exit(4)
         tests(sys.argv[2])
         exit(0)
-    if sys.argv[1] == '-b':
+    if sys.argv[1] == "-b":
         if len(sys.argv) != 3:
             print_help()
             exit(5)
         bitstream(sys.argv[2])
         exit(0)
-    if sys.argv[1] == '-h':
+    if sys.argv[1] == "-h":
         print_help()
         exit(0)
     # check if -f is specified anywhere
-    if sys.argv[1] == '-f':
+    if sys.argv[1] == "-f":
         # if cLut is specified, then it is the 6th argument
         if len(sys.argv) == 8:
             cLut = sys.argv[7]
         else:
-            cLut = ''
+            cLut = ""
         # get inputs
         eq_file = sys.argv[2]
         nLut = int(sys.argv[3])
@@ -184,33 +206,35 @@ def main():
         if len(sys.argv) == 7:
             conn_file = sys.argv[5]
         else:
-            conn_file = ''
+            conn_file = ""
         # run fpga synthesis engine
         foo = get_fpga(eq_file, conn_file, nLut, tLut)
         # check return code
         match foo:
-            case 0: # success
+            case 0:  # success
                 exit(0)
-            case 1: # not enough LUTs
+            case 1:  # not enough LUTs
                 print("Error:", foo)
-            case 2: # eq file not found
+            case 2:  # eq file not found
                 print("Error:", foo)
-            case 3: # conn file not found
+            case 3:  # conn file not found
                 print("Error:", foo)
-            case 4: # invalid cLut
+            case 4:  # invalid cLut
                 print("Error:", foo)
-            case 5: # invalid tLut
+            case 5:  # invalid tLut
                 print("Error:", foo)
-            case 6: # invalid nLut
+            case 6:  # invalid nLut
                 print("Error:", foo)
-            case 7: # invalid eq file
+            case 7:  # invalid eq file
                 print("Error:", foo)
-            case 9: # undefined error
+            case 9:  # undefined error
                 print("Error:", foo)
-        exit(10+foo)
+        exit(10 + foo)
     else:
         print_help()
         exit(1)
+
+
 # end main
 
 if __name__ == "__main__":

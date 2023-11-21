@@ -37,6 +37,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
         raise Exception("tLut must be 4 or 6")
     
     data = fpga.fpga_adt()
+    data.lut_type = tLut
 
     # create LUTs
     for i in range(nLut):
@@ -47,11 +48,10 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
     # TODO: implement
     connectivity = []
     if cLut != '':
-        conn_file = 'connectivity.json'
-        pass
+        data.constrained = True
         # with open(cLut) as f:
         #     lut_data = json.load(f)
-    data.update_connectivity(connectivity)
+    #data.update_connectivity(connectivity)
     
     # minimize expression to fit in LUTs
     eq = []
@@ -115,6 +115,7 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
             equ.update_ops(o)
             red = lse.synth_engine(equ)
 
+        equ.name = nop
         eq.append(equ)
         req.append(nop + '=' + red)
     # update ADT

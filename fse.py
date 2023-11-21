@@ -628,7 +628,7 @@ def show_lut_assignments(
                 print(f"Operation: {lut.op.name} = {lut.op.eq}")
                 print("---------------")
         print("----END----")
-    elif lut_to_show == True:
+    elif lut_to_show != None:
         for lut in fpga_adt.luts:
             if lut.name == lut_to_show:
                 print(f"LUT: {lut.name}")
@@ -639,7 +639,7 @@ def show_lut_assignments(
                 print(f"Operation: {lut.op.name} = {lut.op.eq}")
                 print("---------------")
         print("----END----")
-    elif expr_to_show == True:
+    elif expr_to_show != None:
         print("Expression: " + expr_to_show + "Utilized LUTs:")
         for lut in fpga_adt.luts:
             if lut.op.name == expr_to_show:
@@ -683,6 +683,7 @@ def show_connections(fpga_adt):
             elif elem == "+":
                 print("--↑↓-->".ljust(max_width), end="  |> ")
             else:
+                
                 print(elem.ljust(max_width), end="  |> ")
         print()
 
