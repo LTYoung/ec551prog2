@@ -12,6 +12,7 @@ class fpga_adt:
         self.wire = []
         self.inputs = []
         self.outputs = []
+        self.output_lut_name = {}
         self.lut_type = 0
         self.luts = []
         self.connectivity = []
@@ -124,6 +125,8 @@ class LUT:
         self.name = name
         self.type = tLut
         self.op = ''
+        self.inputs = []
+        self.output = ''
         self.location = []
         self.connections = []
         self.data = {}
@@ -161,4 +164,6 @@ class LUT:
         return self.connections
     # end get_connections
     
+    def __repr__ (self):
+        return self.name
 # end LUT

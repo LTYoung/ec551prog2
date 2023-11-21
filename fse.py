@@ -241,6 +241,7 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
 
         lut_ins.append(lut_inputs)
         lut_outs.append(output_var_name)
+        fpga_adt.output_lut_name[output_var_name] = output_lut_name
 
         # Place LUTs on the FPGA
         for i in range(num_luts):
@@ -258,6 +259,8 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
                     lut.op = eq
                     lut.location = location
                     lut.data = lut_data[i]
+                    lut.inputs = lut_inputs[i]
+                    lut.output = lut_outputs[i]
                     update_fpga_layout(fpga_adt, lut)
                     break
     # route wires
@@ -277,7 +280,7 @@ def routing_free(eq_adt: list, fpga_adt: fpga):
     fpga_adt.update_inputs(external_inputs)
     for input in external_inputs:
         # place the input on a free I/O fabric location
-        location = find_and_place(fpga_adt, "free", "io", "input")
+        locations = find_and_place(fpga_adt, "free", "io", "input")
         update_io_layout(fpga_adt, location, input)
 
     # place outputs
@@ -324,6 +327,8 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
         lut_ins.append(lut_inputs)
         lut_outs.append(output_var_name)
 
+        fpga_adt.output_lut_name[output_var_name] = output_lut_name
+
         output_dict[output_var_name] = output_lut_name
         # place wires
 
@@ -350,9 +355,36 @@ def routing_constrained(eq_adt: list, fpga_adt: fpga):
                     lut.op = eq
                     lut.location = location
                     lut.data = lut_data[i]
+                    lut.inputs = lut_inputs[i]
+                    lut.output = lut_outputs[i]
                     update_fpga_layout(fpga_adt, lut)
                     break
         find_lut_list.pop(0)
+
+    # route inputs
+    # go through each column of the base layer and find the inputs to the LUTS on that column
+    # and route the inputs to the column to the left of the LUTs in the I/O layer
+
+    external_inputs = []
+    for eq in fpga_adt.eqs:
+        for literal in eq.literals:
+            if literal not in lut_outs:
+                external_inputs.append(literal)
+    #
+    external_inputs = list(set(external_inputs))
+    external_inputs.sort()
+    fpga_adt.update_inputs(external_inputs)
+    for input in external_inputs:
+        locations = find_and_place(
+            fpga_adt, "constrained", "io", "input", input_name=input
+        )
+        for location in locations:
+            update_io_layout(fpga_adt, location, input)
+
+    for output in fpga_adt.outputs:
+        locations = find_and_place(fpga_adt, "constrained", "io", "output", output_name=output)
+        for location in locations:
+            update_io_layout(fpga_adt, location, output)
 
 
 def find_and_place(
@@ -363,6 +395,8 @@ def find_and_place(
     remaining_eq: list = None,
     eq_adt=None,
     dependency_dict=None,
+    input_name=None,
+    output_name=None,
 ):
     layout = fpga_adt.get_layout()
     if constraint == "free":
@@ -436,14 +470,73 @@ def find_and_place(
                         for i in range(len(layout)):
                             if layout[i][j] == "":
                                 return [i, j]
+        elif target_layer == "io":
+            base = layout[0][0]  # to reference where the LUTs are
+            layout = layout[0][2]
+            if target_type == "input":
+                target_column = []
+                for j in range(len(layout[0])):
+                    for i in range(len(layout)):
+                        if isinstance(
+                            base[i][j], fpga.LUT
+                        ):  # this is a LUT and needs input on the left
+                            # check if this LUT needs the current input
+                            this_lut = base[i][j]
 
+                            for lut in fpga_adt.luts:
+                                if lut == this_lut:
+                                    if input_name in lut.inputs:
+                                        # place the input to the left of this LUT
+                                        target_column.append(j - 1)
+                                    break
+                # target column is now a list of columns that need this input
+                # find the first row in each column that is empty
+                # get rid of repeats
+                target_column = list(set(target_column))
+                input_assignments = []
+                for column in target_column:
+                    for i in range(len(layout)):
+                        if layout[i][column] == "":
+                            input_assignments.append([i, column])
+                            break
+                return input_assignments
+            # output is the same as input but on the right
+            if target_type == "output":
+                output_lut = fpga_adt.output_lut_name[output_name]
+                target_column = []
+                for j in range(len(layout[0])):
+                    for i in range(len(layout)):
+                        if isinstance(
+                            base[i][j], fpga.LUT
+                        ): 
+                            this_lut = base[i][j]
+
+                            for lut in fpga_adt.luts:
+                                if lut == this_lut:
+                                    if output_lut == lut.name:
+                                        # place the input to the left of this LUT
+                                        target_column.append(j + 1)
+                                    break
+                # target column is now a list of columns that need this input
+                # find the first row in each column that is empty
+                # get rid of repeats
+                target_column = list(set(target_column))
+                output_assignments = []
+                for column in target_column:
+                    for i in range(len(layout)):
+                        if layout[i][column] == "":
+                            output_assignments.append([i, column])
+                            break
+                return output_assignments
+
+                            
     return [0, 0]  # Return location as [x, y]
 
 
 def update_fpga_layout(fpga_adt, lut):
     layout = fpga_adt.get_layout()
     lut_layer = layout[0][0]
-    lut_layer[lut.location[0]][lut.location[1]] = lut.name
+    lut_layer[lut.location[0]][lut.location[1]] = lut
     layout[0][0] = lut_layer
     # fpga_adt.update_layout(layout)
 
@@ -462,8 +555,9 @@ def find_lut(fpga_adt, lut_name, dependency_dict):
     for j in range(len(lut_layer[0])):
         for i in range(len(lut_layer)):
             target = dependency_dict[lut_name]
-            if lut_layer[i][j] == target:
-                return [i, j]
+            if isinstance(lut_layer[i][j], fpga.LUT):
+                if lut_layer[i][j].name == target:
+                    return [i, j]
 
     return [-1, -1]
 
@@ -486,11 +580,11 @@ def place_wires(fpga_adt):
     for j in range(len(wire_layer[0])):
         if j % 2 == 0:
             for i in range(len(wire_layer)):
-                wire_layer[i][j] = "rud"
+                wire_layer[i][j] = "+"
         else:
             for i in range(len(wire_layer)):
                 if i % 2 == 0:
-                    wire_layer[i][j] = "rud"
+                    wire_layer[i][j] = "+"
 
 
 #
