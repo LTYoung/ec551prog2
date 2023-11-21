@@ -88,8 +88,14 @@ def config(expr: list, nLut: int, tLut: int, cLut='', bitstream=''):
             
 
         # minimize expression
+        
+        # check if POS or SOP
+        pos = False
+        if ex[1][0] == '(':
+            pos = True
+
         equ = logic.eq_adt(ex[1])
-        lit, neg, ops = lse.parser(ex[1])
+        lit, neg, ops = lse.parser(ex[1], pos=pos)
         equ.update_literals(lit)
         equ.update_neglist(neg)
         equ.update_ops(ops)
