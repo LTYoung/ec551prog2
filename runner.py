@@ -65,6 +65,7 @@ def bitstream(bs_file):
     # TODO: all detection and generation caused by config
     if ret == -1: # WIP so currently always returns -1
         return 9
+    runner(data)
     return 0
 # end bitstream
 
@@ -102,19 +103,43 @@ def get_fpga(eq_file, conn_file, nLut, tLut):
         print("panic")
         return 9
 
-    # generate report based on output
-    # check LUT usage and report
-
-    # fse.show_lut_assignmnets(False)
-    # fse.show_connections()
-    # fse.show_i_extern()
-    # fse.show_o_extern()
-    # fse.write_bitstream(data)
-    # fse.show_utilization()
-
-
+    runner(data)
     return 0
 # end get_fpga
+
+def get_user_input():
+    # get user input
+    print("Your input:")
+    user_input = input()
+    return user_input
+# end get_user_input
+
+
+def runner(data: fpga.fpga_adt):
+    while True:
+        input = get_user_input()
+
+        if input == 'exit':
+            break
+        elif input == 'f':
+            pass
+        elif input[0] == 'f' and input[1] == ' ':
+            a = input.split(' ')
+            a.pop(0)
+            pass
+        elif input == 'c':
+            pass
+        elif input == 'i':
+            pass
+        elif input == 'o':
+            pass
+        elif input == 'b':
+            pass
+        elif input == 'r':
+            pass
+        else:
+            print("Error: invalid input")
+# end get_outs
 
 
 
