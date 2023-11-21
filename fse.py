@@ -183,7 +183,8 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
 
 def is_combination_relevant(minterm, combination, num_literals, oliteral):
     binary_repr = format(minterm, f"0{num_literals}b")
-    return all(binary_repr[oliteral.index(lit)] != "0" for lit in combination)
+    output = all(binary_repr[oliteral.index(lit)] != "0" for lit in combination)
+    return output
 
 
 def get_relevant_minterms(combination, num_literals, oliteral, table):
@@ -198,17 +199,17 @@ def get_relevant_minterms(combination, num_literals, oliteral, table):
 
 
 def generate_mux_data(num_select_lines, num_inputs):
-    binary_data = "MUX_CONFIG_BITS_PLACEHOLDER"
-    # for select_combination in range(2**num_select_lines):
-    #     # Determine which input is selected by this combination
-    #     selected_input = select_combination % num_inputs
-    #     # For each combination, only one input is selected
-    #     input_state = ["0"] * num_inputs
-    #     if selected_input < num_inputs:
-    #         input_state[selected_input] = "1"  # Set '1' for the selected input
-    #     binary_data += "".join(input_state)
+    binary_data = ""
+    for select_combination in range(2**num_select_lines):
+        # Determine which input is selected by this combination
+        selected_input = select_combination % num_inputs
+        # For each combination, only one input is selected
+        input_state = ["0"] * num_inputs
+        if selected_input < num_inputs:
+            input_state[selected_input] = "1"  # Set '1' for the selected input
+        binary_data += "".join(input_state)
 
-    return binary_data
+    return binary_data[0:15]
 
 
 def adjust_binary_length(binary_data, lut_type):
