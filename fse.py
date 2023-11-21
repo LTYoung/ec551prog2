@@ -581,11 +581,12 @@ def find_lut(fpga_adt, lut_name, dependency_dict):
 def find_io(fpga_adt, name):
     layout = fpga_adt.get_layout()
     io_layer = layout[0][2]
+    locations = []
     for i in range(len(io_layer)):
         for j in range(len(io_layer[i])):
             if io_layer[i][j] == name:
-                return [i, j]
-    return [0, 0]
+                locations.append([i, j])
+    return locations
 
 
 # place wires on base layer every other column
@@ -697,12 +698,31 @@ def format_lut_to_print(lut: fpga.LUT):
     return "\n".join(attributes)
 
 
-def show_i_extern():
-    pass
+# show all external inputs into the FPGA and where they go to
+def show_i_extern(fpga_adt: fpga):
+    print("External Inputs:")
+    for input in fpga_adt.inputs:
+        print(f"Input: {input}")
+        locations = find_io(fpga_adt, input)
+        for location in locations:
+            print(f"Location on the I/O Farbic: {location}")
+
+            print(f"Connected to Wire: {fpga_adt.layout[0][0][location[0]][location[1]]}, Location on the FPGA: {location}")
+        print("---------------")
+    print("----END----")
+    
 
 
-def show_o_extern():
-    pass
+def show_o_extern(fpga_adt: fpga):
+    print("External Outputs:")
+    for output in fpga_adt.outputs:
+        print(f"Output: {output}")
+        locations = find_io(fpga_adt, output)
+        for location in locations:
+            print(f"Location on the I/O Farbic: {location}")
+            print(f"Connected from Wire: {fpga_adt.layout[0][0][location[0]][location[1]]}, Location on the FPGA: {location}")
+        print("---------------")
+    print("----END----")
 
 # dump fpga_adt to json
 def write_bitstream(fpga_adt: fpga):
