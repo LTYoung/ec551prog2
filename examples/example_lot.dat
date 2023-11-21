@@ -1,0 +1,13 @@
+A=a*b*c*d+e*f*g*h+c+r'
+B=a*b+c'*d'+e'*f'+g*h*w*t'
+C=A+x'*y*z'+a*b'*c'*d
+D=A*x*y'*z+j*k'+b*c'
+E=C+D*d*c'+x'*y'+i*k
+F=D*E+a'*c+a'*h*i*r'*g+a'*h*i*r*g
+G=t*h'*e'+e*n'+d+i'*s'+n*e*v*e'*r+t*h'*e+e*n*d+i'*s
+H=x*y*z+s*a*y*s'*u'*G
+I=G*H+i*s+g*r'*a*t
+J=t*h*E+E*n*d+I*s+n'
+K=a*b*c*d*e*f*g+a*b*c*d*e'*f*g+a*b*c*d*e*f'*g+a'*b*c*d*e*f*g'+b*c*d*e*f+c*f'
+L=J*K'+l*o'+l*r'*t+
+M=(L+K')*(h'+e+r)
