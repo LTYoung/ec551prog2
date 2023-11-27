@@ -194,19 +194,18 @@ def main():
     # check if -f is specified anywhere
     if sys.argv[1] == "-f":
         # if cLut is specified, then it is the 6th argument
-        if len(sys.argv) == 8:
-            cLut = sys.argv[7]
+        args = sys.argv
+        if len(sys.argv) == 6:
+            cLut = sys.argv[5]
+            conn_file = cLut
         else:
             cLut = ""
+            conn_file = ""
         # get inputs
         eq_file = sys.argv[2]
         nLut = int(sys.argv[3])
         tLut = int(sys.argv[4])
         # get file
-        if len(sys.argv) == 7:
-            conn_file = sys.argv[5]
-        else:
-            conn_file = ""
         # run fpga synthesis engine
         foo = get_fpga(eq_file, conn_file, nLut, tLut)
         # check return code

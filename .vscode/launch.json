@@ -91,13 +91,13 @@
             "args": ["-f", "${workspaceFolder}/examples/example_8var.dat", "12", "6"]
         },
         {
-            "name": "Python: Run App Example 4 var inter",
+            "name": "Python: Run App Example 4 var inter constrained",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/runner.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "4"]
+            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "4" , "${workspaceFolder}/examples/constrained.bin"]
         },
         {
             "name": "Python: Run App Example 6 var inter",
