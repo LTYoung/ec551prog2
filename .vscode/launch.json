@@ -109,6 +109,15 @@
             "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "6"]
         },
         {
+            "name": "Python: Run App Example 6 var inter constrained",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-f", "${workspaceFolder}/examples/example_4vari.dat", "16", "6", "${workspaceFolder}/examples/constrained.bin"]
+        },
+        {
             "name": "Python: Run App Example long",
             "type": "python",
             "request": "launch",
