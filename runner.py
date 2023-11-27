@@ -162,7 +162,9 @@ def runner(data: fpga.fpga_adt):
         elif input == "o":
             fse.show_o_extern(data)
         elif input == "b":
-            fse.write_bitstream(data)
+            out = fse.write_bitstream(data)
+            with open("bitstream.json", "w") as f:
+                f.write(out)
         elif input == "r":
             fse.show_utilization(data)
         else:
