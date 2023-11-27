@@ -59,6 +59,16 @@ def analyze_eq(eq_adt: list, constraint="free", fpga_adt: fpga = None):
         return output
     elif constraint == "constrained":
         # determine the dependency of each equation
+        depdency = {}
+        for each in eq_adt:
+            oliteral = list(set(each.literals))
+            oliteral.sort()
+            depdendent_list = []
+            for literal in oliteral:
+                if literal in fpga_adt.get_outputs():
+                    depdendent_list.append(literal)
+            depdency[each.name] = depdendent_list
+
 
         # first append any eq with no dependency
         output = []
@@ -98,6 +108,53 @@ def analyze_eq(eq_adt: list, constraint="free", fpga_adt: fpga = None):
                 zip(layer, eq_adt), key=lambda pair: pair[0], reverse=False
             )
         ]
+
+        # another round of reordering, make sure that the equations that are dependent on
+        # other equations are placed after the equations they are dependent on
+        # check each eq and their literals, if the literal is an output, check if it is in the output list
+        # if it is, find the location of the output in the output list
+        # then find the location of the eq in the output list
+        # if it is smaller, swap the two
+        # repeat until no more swaps are needed
+
+        # first create a dictionary of eq name and their location in the output list
+        output_dict = {}
+        for i in range(len(output)):
+            output_dict[output[i].name] = i
+
+        # then go through each eq and their literals
+        # if the literal is an output, check if it is in the output list
+        # if it is, find the location of the output in the output list
+        # then find the location of the eq in the output list
+        # and keep track of the largest location if there are more than 
+        # one dependent output
+        # if the location of the eq is smaller than the location of the output
+        # move the eq to the right of the largest location
+
+        for each in output:
+            oliteral = list(set(each.literals))
+            oliteral.sort()
+            largest_location = 0
+            for literal in oliteral:
+                if literal in fpga_outputs:
+                    if literal in output_dict:
+                        if output_dict[literal] > largest_location:
+                            largest_location = output_dict[literal]
+            if largest_location > output_dict[each.name]:
+                # move the eq to the right of the largest location
+                output.insert(largest_location + 1, output.pop(output_dict[each.name]))
+                # update the output_dict
+                output_dict[each.name] = largest_location + 1
+                for i in range(len(output)):
+                    output_dict[output[i].name] = i
+
+
+
+        
+
+
+
+        
 
         return output
 
@@ -532,8 +589,11 @@ def find_and_place(
                             for lut in fpga_adt.luts:
                                 if lut == this_lut:
                                     if output_lut == lut.name:
-                                        # place the input to the left of this LUT
-                                        target_column.append(j + 1)
+                                        # if this is the not the last LUT, place it to the right
+                                        if j + 1 < len(layout[0]):
+                                            target_column.append(j + 1)
+                                        else:
+                                            target_column.append(j)
                                     break
                 # target column is now a list of columns that need this input
                 # find the first row in each column that is empty
@@ -542,9 +602,15 @@ def find_and_place(
                 output_assignments = []
                 for column in target_column:
                     for i in range(len(layout)):
-                        if layout[i][column] == "":
+                        # if the target column is the last column, instead append 
+                    
+                        if column == len(layout[0]) - 1:
                             output_assignments.append([i, column])
                             break
+                        else: 
+                            if layout[i][column] == "":
+                                output_assignments.append([i, column])
+                                break
                 return output_assignments
 
     return [0, 0]  # Return location as [x, y]
@@ -607,7 +673,7 @@ def place_wires(fpga_adt):
 
 #
 def fse_runner(fpga_adt: fpga):
-    pass 
+    pass
 
 
 def show_lut_assignments(
@@ -630,7 +696,7 @@ def show_lut_assignments(
         print("----END----")
     elif lut_to_show != None:
         for lut in fpga_adt.luts:
-            if lut.name == lut_to_show:
+            if lut.name == lut_to_show[0]:
                 print(f"LUT: {lut.name}")
                 print(f"Location: {lut.location}")
                 print(f"Inputs: {lut.inputs}")
@@ -642,7 +708,7 @@ def show_lut_assignments(
     elif expr_to_show != None:
         print("Expression: " + expr_to_show + "Utilized LUTs:")
         for lut in fpga_adt.luts:
-            if lut.op.name == expr_to_show:
+            if lut.op.name == expr_to_show[0]:
                 print(f"LUT: {lut.name}")
                 print(f"Location: {lut.location}")
                 print(f"Inputs: {lut.inputs}")
@@ -660,7 +726,9 @@ def show_connections(fpga_adt):
     max_width = 0
 
     print("FPGA Layouts")
-    print("--------------------------------------------------------------------------------------------------------")
+    print(
+        "--------------------------------------------------------------------------------------------------------"
+    )
     print("Base Layer: ")
     # Calculate max width
     for row in fpga_adt.layout[0][0]:
@@ -683,11 +751,12 @@ def show_connections(fpga_adt):
             elif elem == "+":
                 print("--↑↓-->".ljust(max_width), end="  |> ")
             else:
-
                 print(elem.ljust(max_width), end="  |> ")
         print()
 
-    print("********************************************************************************************************")
+    print(
+        "********************************************************************************************************"
+    )
     print("I/O Layer: ")
     # Calculate max width
     for row in fpga_adt.layout[0][2]:
@@ -707,6 +776,8 @@ def show_connections(fpga_adt):
             else:
                 print(elem.ljust(max_width), end="  |> ")
         print()
+
+
 def format_lut_to_print(lut: fpga.LUT):
     attributes = [f"{lut.name}"]
     if attributes[0] == "":
