@@ -97,3 +97,5 @@ Comments are at the start of every major function implementation and parts of th
 ## Appendix
 
 ### Known Issues
+
+1. LUT configuration bit generation is incorrect.

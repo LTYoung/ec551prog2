@@ -115,6 +115,7 @@ def partition_to_lut(eq_adt: eq, lut_type: int, fpga_adt: fpga):
     oliteral.sort()
     num_literals = len(oliteral)
 
+
     lut_inputs = []
     lut_outputs = []
     lut_data = []
@@ -630,7 +631,7 @@ def show_lut_assignments(
         print("----END----")
     elif lut_to_show != None:
         for lut in fpga_adt.luts:
-            if lut.name == lut_to_show:
+            if lut.name == lut_to_show[0]:
                 print(f"LUT: {lut.name}")
                 print(f"Location: {lut.location}")
                 print(f"Inputs: {lut.inputs}")
@@ -642,7 +643,7 @@ def show_lut_assignments(
     elif expr_to_show != None:
         print("Expression: " + expr_to_show + "Utilized LUTs:")
         for lut in fpga_adt.luts:
-            if lut.op.name == expr_to_show:
+            if lut.op.name == expr_to_show[0]:
                 print(f"LUT: {lut.name}")
                 print(f"Location: {lut.location}")
                 print(f"Inputs: {lut.inputs}")
